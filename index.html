@@ -143,7 +143,7 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
     closeReal.addEventListener('click', hideReal);
     real.addEventListener('click', function(e){ if (e.target === real) hideReal(); });
 
-    // ------------------ Canvas Galaxy (más realista) ------------------
+    // ------------------ Canvas Galaxy (procedural texture + bloom) ------------------
     var canvas = document.getElementById('galaxyCanvas');
     var ctx = canvas.getContext('2d');
     var off = document.createElement('canvas');
@@ -181,14 +181,13 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
 
         for (var i=0;i<density;i++){
             var arm = i % arms;
-            // usamos una distribución que concentra más partículas cerca del centro
             var rr = Math.pow(Math.random(), 1.2) * maxR;
             var baseTheta = rr * 0.02 + arm * (2*Math.PI/arms);
             var theta = baseTheta + (Math.random()-0.5) * (1.2 - rr/maxR);
             var x = cx + Math.cos(theta) * rr + (Math.random()-0.5)*8;
             var y = cy + Math.sin(theta) * rr + (Math.random()-0.5)*8;
             var size = Math.max(0.3, 1.8 * (1 - rr/maxR) * (0.5+Math.random()));
-            var hue = 40 + Math.random()*60 - (rr/maxR)*50; // más amarillos en centro
+            var hue = 40 + Math.random()*60 - (rr/maxR)*50;
             var a = 0.6 + Math.random()*0.6;
             particles.push({x:x,y:y,rr:rr,theta:theta,size:size,hue:hue,a:a,arm:arm,off:Math.random()*2000});
         }
@@ -200,127 +199,139 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
         }
     }
 
+    // Procedural texture generator: dibuja manchas radiales y gradientes para simular la foto
+    function generateTexture(ctx2, w, h){
+        ctx2.clearRect(0,0,w,h);
+        // base radial gradient
+        var rg = ctx2.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.min(w,h)*0.6);
+        rg.addColorStop(0, 'rgba(255,245,220,0.16)');
+        rg.addColorStop(0.12, 'rgba(255,230,200,0.06)');
+        rg.addColorStop(0.5, 'rgba(20,10,40,0.08)');
+        rg.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx2.fillStyle = rg; ctx2.fillRect(0,0,w,h);
+
+        // paint several colored blobs around the core to simulate dust lanes and color variation
+        var blobs = 18;
+        for (var i=0;i<blobs;i++){
+            var angle = Math.random()*Math.PI*2;
+            var dist = Math.random()*Math.min(w,h)*0.35;
+            var bx = w/2 + Math.cos(angle) * dist * (0.3 + Math.random()*0.9);
+            var by = h/2 + Math.sin(angle) * dist * (0.3 + Math.random()*0.9);
+            var br = (Math.random()*0.4 + 0.08) * Math.min(w,h);
+            var hue = 30 + Math.random()*80;
+            var g = ctx2.createRadialGradient(bx,by,0,bx,by,br);
+            g.addColorStop(0, 'hsla(' + hue + ', 80%, 60%, ' + (0.18 + Math.random()*0.18) + ')');
+            g.addColorStop(0.5, 'rgba(80,80,120,0.06)');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx2.fillStyle = g;
+            ctx2.beginPath(); ctx2.arc(bx,by,br,0,Math.PI*2); ctx2.fill();
+        }
+
+        // add some subtle noise by drawing many tiny translucent dots
+        ctx2.globalCompositeOperation = 'lighter';
+        for (var n=0;n<1200;n++){
+            var nx = Math.random()*w;
+            var ny = Math.random()*h;
+            var nr = Math.random()*1.4;
+            ctx2.fillStyle = 'rgba(255,255,255,' + (Math.random()*0.06) + ')';
+            ctx2.beginPath(); ctx2.arc(nx,ny,nr,0,Math.PI*2); ctx2.fill();
+        }
+        ctx2.globalCompositeOperation = 'source-over';
+
+        // add a darker dust lane crossing the core
+        ctx2.save();
+        ctx2.translate(w/2,h/2);
+        ctx2.rotate(0.18);
+        ctx2.fillStyle = 'rgba(0,0,0,0.18)';
+        ctx2.beginPath();
+        ctx2.ellipse(0,0,Math.min(w,h)*0.6, Math.min(w,h)*0.12, 0, 0, Math.PI*2);
+        ctx2.fill();
+        ctx2.restore();
+    }
+
     function draw(){
         var w = canvas.width / (window.devicePixelRatio || 1);
         var h = canvas.height / (window.devicePixelRatio || 1);
 
-        // fondo oscuro
         ctx.clearRect(0,0,w,h);
-        ctx.fillStyle = '#000006';
-        ctx.fillRect(0,0,w,h);
+        ctx.fillStyle = '#000006'; ctx.fillRect(0,0,w,h);
 
-        // starfield fondo
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.fillStyle = '#ffffff';
-        for (var s=0;s<starfield.length;s++){
-            var st = starfield[s];
-            ctx.globalAlpha = st.a * 0.6;
-            ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI*2); ctx.fill();
+        // draw texture into offscreen canvas
+        if (off.width !== canvas.width || off.height !== canvas.height) {
+            off.width = canvas.width; off.height = canvas.height; offCtx.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0);
         }
-        ctx.globalAlpha = 1;
+        generateTexture(offCtx, w, h);
 
-        // dibujar partículas en offscreen para aplicar bloom/blur después
-        offCtx.clearRect(0,0,off.width,off.height);
-        offCtx.globalCompositeOperation = 'source-over';
-
-        // núcleo brillante primero (offscreen)
-        var coreRad = Math.min(w,h) * 0.08 + Math.abs(Math.sin(Date.now()/1200))*Math.min(w,h)*0.01;
-        var coreX = w/2, coreY = h/2;
-        var coreG = offCtx.createRadialGradient(coreX,coreY,0,coreX,coreY,coreRad*2.5);
-        coreG.addColorStop(0,'rgba(255,250,230,1)');
-        coreG.addColorStop(0.12,'rgba(255,230,200,0.9)');
-        coreG.addColorStop(0.3,'rgba(255,200,160,0.3)');
-        coreG.addColorStop(1,'rgba(0,0,0,0)');
-        offCtx.fillStyle = coreG;
-        offCtx.beginPath(); offCtx.arc(coreX, coreY, coreRad*1.6, 0, Math.PI*2); offCtx.fill();
-
-        // partículas (polvo) en offscreen
-        offCtx.globalCompositeOperation = 'lighter';
-        for (var i=0;i<particles.length;i++){
-            var p = particles[i];
-            // movimiento en espiral: theta incrementa según distancia
-            p.theta += 0.0009 + (p.rr / (Math.min(w,h))) * 0.0006;
-            var px = w/2 + Math.cos(p.theta + rotation) * p.rr;
-            var py = h/2 + Math.sin(p.theta + rotation) * p.rr;
-
-            var tw = 0.45 + 0.55 * Math.sin((Date.now()+p.off)/900);
-            var size = p.size * (0.6 + tw);
-
-            var grad = offCtx.createRadialGradient(px,py,0,px,py,size*6);
-            grad.addColorStop(0, 'hsla(' + Math.round(p.hue) + ',85%,' + (55 - (p.rr/(Math.min(w,h))*30)) + '%, ' + (p.a) + ')');
-            grad.addColorStop(0.25, 'rgba(255,255,255,0.9)');
-            grad.addColorStop(0.6, 'rgba(180,200,255,0.12)');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
-            offCtx.fillStyle = grad;
-            offCtx.beginPath(); offCtx.arc(px,py, Math.max(0.25, size), 0, Math.PI*2); offCtx.fill();
-        }
-
-        // dibujar bandas de polvo (dark lane) usando curvas alpha para simular el polvo oscurecedor
-        offCtx.globalCompositeOperation = 'source-over';
-        offCtx.fillStyle = 'rgba(0,0,0,0.16)';
-        offCtx.beginPath();
-        // dibuja una forma elíptica oscura cruzando el núcleo
-        offCtx.ellipse(coreX, coreY, Math.min(w,h)*0.6, Math.min(w,h)*0.12, rotation*0.4, 0, Math.PI*2);
-        offCtx.fill();
-
-        // aplicar blur/bloom: usamos ctx.filter en el canvas destino
-        // primero dibujamos offscreen a main con blur para glow
+        // bloom pass: draw blurred texture with additive blending
         try {
             ctx.save();
             ctx.globalCompositeOperation = 'lighter';
-            ctx.filter = 'blur(10px) brightness(1.2)';
+            ctx.filter = 'blur(12px) contrast(1.05)';
             ctx.drawImage(off, 0, 0, w, h);
+            ctx.filter = 'blur(30px) brightness(1.2)';
+            ctx.globalAlpha = 0.36;
+            ctx.drawImage(off, 0, 0, w, h);
+            ctx.globalAlpha = 1;
             ctx.filter = 'none';
             ctx.restore();
         } catch (e) {
-            // fallback: si filter no disponible, dibujamos sin blur
+            // fallback: no filter support
             ctx.globalCompositeOperation = 'lighter';
-            ctx.drawImage(off, 0, 0, w, h);
+            ctx.drawImage(off, 0,0,w,h);
+            ctx.globalCompositeOperation = 'source-over';
         }
 
-        // dibujar partículas nítidas encima para detalle
+        // subtle vignette
+        var vign = ctx.createRadialGradient(w/2,h/2, Math.min(w,h)*0.2, w/2,h/2, Math.min(w,h)*0.9);
+        vign.addColorStop(0, 'rgba(255,255,255,0)');
+        vign.addColorStop(1, 'rgba(0,0,0,0.45)');
+        ctx.fillStyle = vign; ctx.fillRect(0,0,w,h);
+
+        // starfield background
+        ctx.globalCompositeOperation = 'lighter';
+        for (var s=0;s<starfield.length;s++){
+            var st = starfield[s];
+            ctx.globalAlpha = st.a * 0.6;
+            ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // particles (sharp) on top
         ctx.globalCompositeOperation = 'lighter';
         for (var i=0;i<particles.length;i++){
             var p = particles[i];
+            p.theta += 0.0009 + (p.rr / (Math.min(w,h))) * 0.0006;
             var px = w/2 + Math.cos(p.theta + rotation) * p.rr;
             var py = h/2 + Math.sin(p.theta + rotation) * p.rr;
             var size = p.size * (0.6 + 0.6 * Math.sin((Date.now()+p.off)/700));
-            var g = ctx.createRadialGradient(px,py,0,px,py,size*4);
+            var g = ctx.createRadialGradient(px,py,0,px,py,size*3);
             g.addColorStop(0, 'rgba(255,255,255,0.95)');
-            g.addColorStop(0.2, 'hsla(' + Math.round(p.hue) + ',85%,' + (55 - (p.rr/(Math.min(w,h))*30)) + '%, ' + (Math.min(1,p.a+0.15)) + ')');
+            g.addColorStop(0.25, 'hsla(' + Math.round(p.hue) + ',85%,' + (55 - (p.rr/(Math.min(w,h))*30)) + '%, ' + (Math.min(1,p.a+0.15)) + ')');
             g.addColorStop(1, 'rgba(0,0,0,0)');
             ctx.fillStyle = g;
             ctx.beginPath(); ctx.arc(px,py, Math.max(0.2, size*0.9), 0, Math.PI*2); ctx.fill();
         }
 
-        // un par de trazos suaves para los brazos densos
+        // core sharp
+        var coreRad = Math.min(w,h) * 0.07 + Math.abs(Math.sin(Date.now()/1400))*Math.min(w,h)*0.008;
+        var core = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,coreRad);
+        core.addColorStop(0,'rgba(255,250,230,1)');
+        core.addColorStop(0.12,'rgba(255,235,200,0.95)');
+        core.addColorStop(0.28,'rgba(255,210,160,0.28)');
+        core.addColorStop(1,'rgba(0,0,0,0)');
         ctx.globalCompositeOperation = 'lighter';
-        for (var a=0;a<4;a++){
-            ctx.beginPath();
-            var steps = 200;
-            for (var t=0;t<steps;t++){
-                var frac = t/steps;
-                var rr = frac * Math.min(w,h) * 0.46;
-                var ang = frac*8.0 + a*(2*Math.PI/4) + rotation*4;
-                var sx = w/2 + Math.cos(ang) * rr;
-                var sy = h/2 + Math.sin(ang) * rr;
-                if (t===0) ctx.moveTo(sx,sy); else ctx.lineTo(sx,sy);
-            }
-            ctx.strokeStyle = 'rgba(255,240,200,0.02)'; ctx.lineWidth = 10; ctx.stroke();
-            ctx.strokeStyle = 'rgba(255,220,180,0.02)'; ctx.lineWidth = 4; ctx.stroke();
-        }
+        ctx.fillStyle = core; ctx.beginPath(); ctx.arc(w/2,h/2, coreRad, 0, Math.PI*2); ctx.fill();
 
-        // overlay de pequeñas estrellas brillantes
-        ctx.globalCompositeOperation = 'lighter';
+        // foreground bright stars
         for (var s=0;s<120;s++){
-            var sx = (Math.sin(s*12.9898 + Date.now()*0.0003) * 43758.5453) % w;
-            var sy = (Math.cos(s*7.233 + Date.now()*0.0004) * 12345.6789) % h;
-            var sr = 0.6 + Math.abs(Math.sin((Date.now() + s*13)/700))*1.6;
+            var sx = Math.abs(Math.sin(s*12.9898 + Date.now()*0.0004) * 43758.5453) % w;
+            var sy = Math.abs(Math.cos(s*7.233 + Date.now()*0.0005) * 12345.6789) % h;
+            var sr = 0.4 + Math.abs(Math.sin((Date.now() + s*13)/700))*1.6;
             ctx.fillStyle = 'rgba(255,255,255,' + (0.15 + Math.random()*0.6) + ')';
-            ctx.beginPath(); ctx.arc(Math.abs(sx), Math.abs(sy), sr, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(sx, sy, sr, 0, Math.PI*2); ctx.fill();
         }
 
-        rotation += 0.0010; // rotación global
+        rotation += 0.0010;
         animId = requestAnimationFrame(draw);
     }
 
@@ -342,12 +353,6 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
     // Pause animation when tab hidden to save CPU
     document.addEventListener('visibilitychange', function(){ if (document.hidden) { if (running && animId) { cancelAnimationFrame(animId); animId = null; } } else { if (real.classList.contains('visible') && running && !animId) animId = requestAnimationFrame(draw); } });
 
-    // stop on low-power devices: detect small devices and cap particles
-    if (window.innerWidth < 520) {
-        // mobile: lighten particle creation by capping inside createParticles()
-    }
-
-    // Expose start/stop to outer scope if needed (not necessary)
 })();
 </script>
 
