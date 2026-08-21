@@ -13,21 +13,52 @@
 }
 
 body {
-    overflow: hidden;
     height: 100vh;
     background: #02000b;
     font-family: Georgia, serif;
     color: white;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* GALAXIA */
+/* BOTÓN */
+.show-galaxy-btn {
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    bottom: 24px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg,#ff7ab6,#8b5cff);
+    color: white;
+    border: none;
+    padding: 14px 22px;
+    border-radius: 999px;
+    font-size: 16px;
+    box-shadow: 0 6px 20px rgba(139,92,255,.18);
+    cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.show-galaxy-btn:active { transform: translateX(-50%) scale(.98); }
+.show-galaxy-btn:focus { outline: 3px solid rgba(255,183,230,.25); }
+
+/* GALAXIA - inicialmente oculta */
 .galaxy {
-    position: relative;
+    position: fixed;
+    inset: 0;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
     background:
         radial-gradient(circle at 50% 50%, #32145f 0%, #11052d 28%, #050015 65%, #010008 100%);
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(.98);
+    transition: opacity .6s ease, transform .6s ease;
+}
+.galaxy.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
 }
 
 /* Nebulosa */
@@ -204,21 +235,51 @@ body {
     display: inline-block;
     animation: heartbeat 1.2s infinite;
 }
+
+/* BOTÓN CERRAR (para móvil) */
+.close-btn {
+    position: fixed;
+    z-index: 10000;
+    top: 18px;
+    right: 18px;
+    background: rgba(0,0,0,.35);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.08);
+    padding: 8px 10px;
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    display: none;
+}
+.galaxy.visible .close-btn { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+    .galaxy::before,
+    .stars,
+    .shooting-star,
+    .heart,
+    .heart-small { animation: none !important; }
+}
 </style>
 </head>
 
 <body>
 
-<div class="galaxy">
+<!-- Botón para mostrar/ocultar la galaxia -->
+<button id="toggle-galaxy" class="show-galaxy-btn" aria-controls="galaxy" aria-expanded="false">Mostrar galaxia</button>
 
-    <div class="stars"></div>
+<div class="galaxy" id="galaxy" role="region" aria-hidden="true">
 
-    <div class="shooting-star"></div>
-    <div class="shooting-star"></div>
+    <button id="close-galaxy" class="close-btn" aria-label="Cerrar galaxia">Cerrar ✕</button>
 
-    <div class="heart">🩶</div>
+    <div class="stars" aria-hidden="true"></div>
 
-    <div class="planet"></div>
+    <div class="shooting-star" aria-hidden="true"></div>
+    <div class="shooting-star" aria-hidden="true"></div>
+
+    <div class="heart" aria-hidden="true">🩶</div>
+
+    <div class="planet" aria-hidden="true"></div>
 
     <div class="message">
         <h1>Mi universo eres tú</h1>
@@ -231,11 +292,59 @@ body {
 
         <p class="love">
             Te quiero hasta el infinito y más allá
-            <span class="heart-small">🩶</span>
+            <span class="heart-small" aria-hidden="true">🩶</span>
         </p>
     </div>
 
 </div>
+
+<script>
+(function(){
+    var toggle = document.getElementById('toggle-galaxy');
+    var galaxy = document.getElementById('galaxy');
+    var closeBtn = document.getElementById('close-galaxy');
+
+    function showGalaxy() {
+        galaxy.classList.add('visible');
+        galaxy.setAttribute('aria-hidden','false');
+        toggle.setAttribute('aria-expanded','true');
+        toggle.textContent = 'Ocultar galaxia';
+        // opcional: dar foco al contenido para accesibilidad
+        // document.querySelector('.message h1').focus();
+    }
+
+    function hideGalaxy() {
+        galaxy.classList.remove('visible');
+        galaxy.setAttribute('aria-hidden','true');
+        toggle.setAttribute('aria-expanded','false');
+        toggle.textContent = 'Mostrar galaxia';
+        toggle.focus();
+    }
+
+    toggle.addEventListener('click', function(){
+        if (galaxy.classList.contains('visible')) hideGalaxy();
+        else showGalaxy();
+    });
+
+    closeBtn.addEventListener('click', function(){ hideGalaxy(); });
+
+    // cerrar con Escape
+    document.addEventListener('keydown', function(e){
+        if (e.key === 'Escape' && galaxy.classList.contains('visible')) {
+            hideGalaxy();
+        }
+    });
+
+    // Para tocar fuera de la caja si se desea cerrar (opcional)
+    galaxy.addEventListener('click', function(e){
+        // si se hace click directamente sobre el overlay (no en sus hijos) cerramos
+        if (e.target === galaxy) hideGalaxy();
+    });
+
+    // Si quieres que la galaxia aparezca automáticamente la primera vez, descomenta:
+    // showGalaxy();
+})();
+</script>
 
 </body>
 </html>
