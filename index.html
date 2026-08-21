@@ -45,9 +45,9 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
 .real-galaxy.visible { display: block }
 #galaxyCanvas { width: 100%; height: 100%; display: block }
 .real-wrapper { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none }
-.real-message { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); text-align:center; color: #eee; pointer-events:auto }
-.real-message h2 { font-size: clamp(20px,4vw,42px); color: #ffe; text-shadow: 0 8px 40px rgba(255,240,200,.08), 0 2px 6px rgba(0,0,0,.6) }
-.real-message .heart-grey { display:inline-block; font-size: 36px; color: #cfcfcf; filter: drop-shadow(0 6px 18px rgba(0,0,0,.6)) }
+.real-message { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); text-align:center; color: #fff; pointer-events:auto }
+.real-message h2 { font-size: clamp(24px,4.2vw,56px); color: #fff; text-shadow: 0 12px 50px rgba(255,220,180,.08), 0 4px 12px rgba(0,0,0,.6); font-weight:700 }
+.real-message .heart-grey { display:inline-block; font-size: 48px; color: #cfcfcf; filter: drop-shadow(0 12px 36px rgba(255,240,220,.06)); margin-top:10px }
 .real-close { position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: #fff; padding:8px 10px; border-radius:10px; cursor:pointer; pointer-events:auto }
 
 @media (prefers-reduced-motion: reduce) { .galaxy::before, .stars, .shooting-star, .heart, .heart-small { animation: none !important } }
@@ -97,7 +97,12 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
     <div class="real-wrapper" aria-hidden="true">
         <div class="real-message" role="status">
             <h2>Te amo hasta el infinito</h2>
-            <div class="heart-grey">💔</div>
+            <!-- Usamos un SVG inline para garantizar color gris consistente -->
+            <div class="heart-grey" aria-hidden="true">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M12 21s-7.5-4.9-9.2-8.1C.7 9.9 4.3 6 7.1 6c1.6 0 2.5 1.1 2.9 1.7.4-.6 1.3-1.7 2.9-1.7 2.8 0 6.4 3.9 4.3 6.9C19.5 16.1 12 21 12 21z" fill="#cfcfcf" />
+                </svg>
+            </div>
         </div>
     </div>
     <button id="close-real" class="real-close" aria-label="Cerrar vista de galaxia">Cerrar ✕</button>
@@ -131,116 +136,191 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
     galaxy.addEventListener('click', function(e){ if (e.target === galaxy) hideGalaxy(); });
 
     // Open the realistic animated galaxy
-    openReal.addEventListener('click', function(){
-        // hide the soft overlay and show the canvas galaxy
-        hideGalaxy();
-        showReal();
-    });
+    openReal.addEventListener('click', function(){ hideGalaxy(); showReal(); });
 
-    function showReal(){
-        real.classList.add('visible');
-        real.setAttribute('aria-hidden','false');
-        startGalaxy();
-    }
-    function hideReal(){
-        real.classList.remove('visible');
-        real.setAttribute('aria-hidden','true');
-        stopGalaxy();
-        toggle.focus();
-    }
+    function showReal(){ real.classList.add('visible'); real.setAttribute('aria-hidden','false'); startGalaxy(); }
+    function hideReal(){ real.classList.remove('visible'); real.setAttribute('aria-hidden','true'); stopGalaxy(); toggle.focus(); }
     closeReal.addEventListener('click', hideReal);
     real.addEventListener('click', function(e){ if (e.target === real) hideReal(); });
 
-    // ------------------ Canvas Galaxy ------------------
+    // ------------------ Canvas Galaxy (más realista) ------------------
     var canvas = document.getElementById('galaxyCanvas');
     var ctx = canvas.getContext('2d');
+    var off = document.createElement('canvas');
+    var offCtx = off.getContext('2d');
     var particles = [];
+    var starfield = [];
     var animId = null;
     var running = false;
+    var rotation = 0;
 
     function resize(){
-        canvas.width = window.innerWidth * devicePixelRatio;
-        canvas.height = window.innerHeight * devicePixelRatio;
+        var ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.round(window.innerWidth * ratio);
+        canvas.height = Math.round(window.innerHeight * ratio);
         canvas.style.width = window.innerWidth + 'px';
         canvas.style.height = window.innerHeight + 'px';
-        ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+        ctx.setTransform(ratio,0,0,ratio,0,0);
+
+        off.width = canvas.width;
+        off.height = canvas.height;
+        offCtx.setTransform(ratio,0,0,ratio,0,0);
     }
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', function(){ if (real.classList.contains('visible')) { resize(); createParticles(); } else { resize(); } });
 
     function createParticles(){
         particles = [];
+        starfield = [];
         var w = window.innerWidth;
         var h = window.innerHeight;
-        var centerX = w/2;
-        var centerY = h/2;
-        var arms = 4; // number of spiral arms
-        var count = Math.max(800, Math.floor((w*h)/700));
-        for (var i=0;i<count;i++){
+        var cx = w/2, cy = h/2;
+        var maxR = Math.min(w,h) * 0.48;
+        var arms = 4;
+        var density = Math.max(1200, Math.floor((w*h)/1300));
+        density = Math.min(density, 3500); // cap para móviles
+
+        for (var i=0;i<density;i++){
             var arm = i % arms;
-            var r = Math.pow(Math.random(),1.2) * Math.min(w,h) * 0.45; // radius
-            var angle = r * 0.015 + (arm * (2*Math.PI/arms)) + (Math.random() - 0.5) * 0.6;
-            var x = centerX + Math.cos(angle) * r;
-            var y = centerY + Math.sin(angle) * r;
-            var size = Math.max(0.4, 2.2 * (1 - r/(Math.min(w,h)*0.45)) * Math.random());
-            var life = 1 + Math.random()*3;
-            var hue = 220 - (r/(Math.min(w,h)*0.45))*120 + Math.random()*30; // bluish to yellowish
-            particles.push({x:x, y:y, baseX:x-centerX, baseY:y-centerY, r:r, angle:angle, size:size, life:life, hue:hue, arm:arm});
+            // usamos una distribución que concentra más partículas cerca del centro
+            var rr = Math.pow(Math.random(), 1.2) * maxR;
+            var baseTheta = rr * 0.02 + arm * (2*Math.PI/arms);
+            var theta = baseTheta + (Math.random()-0.5) * (1.2 - rr/maxR);
+            var x = cx + Math.cos(theta) * rr + (Math.random()-0.5)*8;
+            var y = cy + Math.sin(theta) * rr + (Math.random()-0.5)*8;
+            var size = Math.max(0.3, 1.8 * (1 - rr/maxR) * (0.5+Math.random()));
+            var hue = 40 + Math.random()*60 - (rr/maxR)*50; // más amarillos en centro
+            var a = 0.6 + Math.random()*0.6;
+            particles.push({x:x,y:y,rr:rr,theta:theta,size:size,hue:hue,a:a,arm:arm,off:Math.random()*2000});
+        }
+
+        // starfield: puntos aleatorios en toda la pantalla
+        var stars = Math.min(800, Math.floor((w*h)/15000));
+        for (var s=0;s<stars;s++){
+            starfield.push({x:Math.random()*w, y:Math.random()*h, r:Math.random()*1.2, a:0.3+Math.random()*0.8});
         }
     }
 
-    var rotation = 0;
     function draw(){
-        var w = canvas.width/devicePixelRatio;
-        var h = canvas.height/devicePixelRatio;
+        var w = canvas.width / (window.devicePixelRatio || 1);
+        var h = canvas.height / (window.devicePixelRatio || 1);
+
+        // fondo oscuro
         ctx.clearRect(0,0,w,h);
-        // subtle vignette
-        var g = ctx.createLinearGradient(0,0,0,h);
-        // center glow
-        ctx.globalCompositeOperation = 'source-over';
-        var radial = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.min(w,h)*0.6);
-        radial.addColorStop(0, 'rgba(255,245,220,0.18)');
-        radial.addColorStop(0.12, 'rgba(255,240,200,0.06)');
-        radial.addColorStop(0.5, 'rgba(20,10,40,0.06)');
-        radial.addColorStop(1, 'rgba(0,0,0,1)');
-        ctx.fillStyle = radial;
+        ctx.fillStyle = '#000006';
         ctx.fillRect(0,0,w,h);
 
-        // stars background
+        // starfield fondo
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#ffffff';
+        for (var s=0;s<starfield.length;s++){
+            var st = starfield[s];
+            ctx.globalAlpha = st.a * 0.6;
+            ctx.beginPath(); ctx.arc(st.x, st.y, st.r, 0, Math.PI*2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+
+        // dibujar partículas en offscreen para aplicar bloom/blur después
+        offCtx.clearRect(0,0,off.width,off.height);
+        offCtx.globalCompositeOperation = 'source-over';
+
+        // núcleo brillante primero (offscreen)
+        var coreRad = Math.min(w,h) * 0.08 + Math.abs(Math.sin(Date.now()/1200))*Math.min(w,h)*0.01;
+        var coreX = w/2, coreY = h/2;
+        var coreG = offCtx.createRadialGradient(coreX,coreY,0,coreX,coreY,coreRad*2.5);
+        coreG.addColorStop(0,'rgba(255,250,230,1)');
+        coreG.addColorStop(0.12,'rgba(255,230,200,0.9)');
+        coreG.addColorStop(0.3,'rgba(255,200,160,0.3)');
+        coreG.addColorStop(1,'rgba(0,0,0,0)');
+        offCtx.fillStyle = coreG;
+        offCtx.beginPath(); offCtx.arc(coreX, coreY, coreRad*1.6, 0, Math.PI*2); offCtx.fill();
+
+        // partículas (polvo) en offscreen
+        offCtx.globalCompositeOperation = 'lighter';
+        for (var i=0;i<particles.length;i++){
+            var p = particles[i];
+            // movimiento en espiral: theta incrementa según distancia
+            p.theta += 0.0009 + (p.rr / (Math.min(w,h))) * 0.0006;
+            var px = w/2 + Math.cos(p.theta + rotation) * p.rr;
+            var py = h/2 + Math.sin(p.theta + rotation) * p.rr;
+
+            var tw = 0.45 + 0.55 * Math.sin((Date.now()+p.off)/900);
+            var size = p.size * (0.6 + tw);
+
+            var grad = offCtx.createRadialGradient(px,py,0,px,py,size*6);
+            grad.addColorStop(0, 'hsla(' + Math.round(p.hue) + ',85%,' + (55 - (p.rr/(Math.min(w,h))*30)) + '%, ' + (p.a) + ')');
+            grad.addColorStop(0.25, 'rgba(255,255,255,0.9)');
+            grad.addColorStop(0.6, 'rgba(180,200,255,0.12)');
+            grad.addColorStop(1, 'rgba(0,0,0,0)');
+            offCtx.fillStyle = grad;
+            offCtx.beginPath(); offCtx.arc(px,py, Math.max(0.25, size), 0, Math.PI*2); offCtx.fill();
+        }
+
+        // dibujar bandas de polvo (dark lane) usando curvas alpha para simular el polvo oscurecedor
+        offCtx.globalCompositeOperation = 'source-over';
+        offCtx.fillStyle = 'rgba(0,0,0,0.16)';
+        offCtx.beginPath();
+        // dibuja una forma elíptica oscura cruzando el núcleo
+        offCtx.ellipse(coreX, coreY, Math.min(w,h)*0.6, Math.min(w,h)*0.12, rotation*0.4, 0, Math.PI*2);
+        offCtx.fill();
+
+        // aplicar blur/bloom: usamos ctx.filter en el canvas destino
+        // primero dibujamos offscreen a main con blur para glow
+        try {
+            ctx.save();
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.filter = 'blur(10px) brightness(1.2)';
+            ctx.drawImage(off, 0, 0, w, h);
+            ctx.filter = 'none';
+            ctx.restore();
+        } catch (e) {
+            // fallback: si filter no disponible, dibujamos sin blur
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.drawImage(off, 0, 0, w, h);
+        }
+
+        // dibujar partículas nítidas encima para detalle
         ctx.globalCompositeOperation = 'lighter';
         for (var i=0;i<particles.length;i++){
             var p = particles[i];
-            // update angle slowly to create swirl
-            var speed = 0.0006 + (0.0002 * (i%5));
-            p.angle += speed * (1 + p.r/ (Math.min(w,h))); // faster outside
-            var cx = w/2 + Math.cos(p.angle + rotation) * p.r;
-            var cy = h/2 + Math.sin(p.angle + rotation) * p.r;
-            var gradient = ctx.createRadialGradient(cx,cy,0,cx,cy,p.size*6);
-            var color = 'hsl(' + Math.round(p.hue) + ', 80%,' + (60 - (p.r/(Math.min(w,h)*0.45))*30) + '%)';
-            gradient.addColorStop(0, color);
-            gradient.addColorStop(0.3, 'rgba(255,255,255,0.65)');
-            gradient.addColorStop(0.6, 'rgba(180,200,255,0.14)');
-            gradient.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = gradient;
-            var s = p.size * (0.6 + 0.8 * Math.sin((Date.now()+i*37)/800)); // twinkle
-            ctx.beginPath();
-            ctx.arc(cx,cy,s,0,Math.PI*2);
-            ctx.fill();
+            var px = w/2 + Math.cos(p.theta + rotation) * p.rr;
+            var py = h/2 + Math.sin(p.theta + rotation) * p.rr;
+            var size = p.size * (0.6 + 0.6 * Math.sin((Date.now()+p.off)/700));
+            var g = ctx.createRadialGradient(px,py,0,px,py,size*4);
+            g.addColorStop(0, 'rgba(255,255,255,0.95)');
+            g.addColorStop(0.2, 'hsla(' + Math.round(p.hue) + ',85%,' + (55 - (p.rr/(Math.min(w,h))*30)) + '%, ' + (Math.min(1,p.a+0.15)) + ')');
+            g.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = g;
+            ctx.beginPath(); ctx.arc(px,py, Math.max(0.2, size*0.9), 0, Math.PI*2); ctx.fill();
         }
 
-        // bright core
-        var coreRad = Math.min(w,h)*0.09 + Math.abs(Math.sin(Date.now()/2000))*Math.min(w,h)*0.01;
-        var core = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,coreRad);
-        core.addColorStop(0, 'rgba(255,250,230,1)');
-        core.addColorStop(0.2, 'rgba(255,230,200,0.9)');
-        core.addColorStop(0.4, 'rgba(255,200,160,0.32)');
-        core.addColorStop(1, 'rgba(0,0,0,0)');
+        // un par de trazos suaves para los brazos densos
         ctx.globalCompositeOperation = 'lighter';
-        ctx.fillStyle = core;
-        ctx.beginPath();
-        ctx.arc(w/2,h/2, coreRad, 0, Math.PI*2);
-        ctx.fill();
+        for (var a=0;a<4;a++){
+            ctx.beginPath();
+            var steps = 200;
+            for (var t=0;t<steps;t++){
+                var frac = t/steps;
+                var rr = frac * Math.min(w,h) * 0.46;
+                var ang = frac*8.0 + a*(2*Math.PI/4) + rotation*4;
+                var sx = w/2 + Math.cos(ang) * rr;
+                var sy = h/2 + Math.sin(ang) * rr;
+                if (t===0) ctx.moveTo(sx,sy); else ctx.lineTo(sx,sy);
+            }
+            ctx.strokeStyle = 'rgba(255,240,200,0.02)'; ctx.lineWidth = 10; ctx.stroke();
+            ctx.strokeStyle = 'rgba(255,220,180,0.02)'; ctx.lineWidth = 4; ctx.stroke();
+        }
 
-        rotation += 0.0009; // slow global rotation
+        // overlay de pequeñas estrellas brillantes
+        ctx.globalCompositeOperation = 'lighter';
+        for (var s=0;s<120;s++){
+            var sx = (Math.sin(s*12.9898 + Date.now()*0.0003) * 43758.5453) % w;
+            var sy = (Math.cos(s*7.233 + Date.now()*0.0004) * 12345.6789) % h;
+            var sr = 0.6 + Math.abs(Math.sin((Date.now() + s*13)/700))*1.6;
+            ctx.fillStyle = 'rgba(255,255,255,' + (0.15 + Math.random()*0.6) + ')';
+            ctx.beginPath(); ctx.arc(Math.abs(sx), Math.abs(sy), sr, 0, Math.PI*2); ctx.fill();
+        }
+
+        rotation += 0.0010; // rotación global
         animId = requestAnimationFrame(draw);
     }
 
@@ -256,12 +336,18 @@ body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: w
         if (animId) cancelAnimationFrame(animId);
         animId = null;
         ctx && ctx.clearRect(0,0,canvas.width,canvas.height);
+        offCtx && offCtx.clearRect(0,0,off.width,off.height);
     }
 
     // Pause animation when tab hidden to save CPU
-    document.addEventListener('visibilitychange', function(){ if (document.hidden) { if (running) { cancelAnimationFrame(animId); animId = null; } } else { if (real.classList.contains('visible')) { animId = requestAnimationFrame(draw); } } });
+    document.addEventListener('visibilitychange', function(){ if (document.hidden) { if (running && animId) { cancelAnimationFrame(animId); animId = null; } } else { if (real.classList.contains('visible') && running && !animId) animId = requestAnimationFrame(draw); } });
 
-    // End canvas galaxy
+    // stop on low-power devices: detect small devices and cap particles
+    if (window.innerWidth < 520) {
+        // mobile: lighten particle creation by capping inside createParticles()
+    }
+
+    // Expose start/stop to outer scope if needed (not necessary)
 })();
 </script>
 
