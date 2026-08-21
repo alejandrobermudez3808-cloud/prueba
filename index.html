@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi universo eres tú 🩶</title>
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    overflow: hidden;
+    height: 100vh;
+    background: #02000b;
+    font-family: Georgia, serif;
+    color: white;
+}
+
+/* GALAXIA */
+.galaxy {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at 50% 50%, #32145f 0%, #11052d 28%, #050015 65%, #010008 100%);
+}
+
+/* Nebulosa */
+.galaxy::before {
+    content: "";
+    position: absolute;
+    width: 80vw;
+    height: 80vw;
+    left: 10%;
+    top: 5%;
+    border-radius: 50%;
+    background:
+        radial-gradient(ellipse, rgba(255, 80, 190, .18), transparent 55%),
+        radial-gradient(ellipse, rgba(80, 120, 255, .18), transparent 65%);
+    filter: blur(35px);
+    animation: nebula 8s ease-in-out infinite alternate;
+}
+
+@keyframes nebula {
+    from {
+        transform: scale(1) rotate(0deg);
+        opacity: .6;
+    }
+    to {
+        transform: scale(1.25) rotate(15deg);
+        opacity: 1;
+    }
+}
+
+/* ESTRELLAS */
+.stars {
+    position: absolute;
+    inset: 0;
+    background-image:
+        radial-gradient(2px 2px at 10% 20%, white, transparent),
+        radial-gradient(1px 1px at 20% 70%, white, transparent),
+        radial-gradient(2px 2px at 30% 30%, white, transparent),
+        radial-gradient(1px 1px at 40% 80%, white, transparent),
+        radial-gradient(2px 2px at 50% 15%, white, transparent),
+        radial-gradient(1px 1px at 60% 60%, white, transparent),
+        radial-gradient(2px 2px at 70% 25%, white, transparent),
+        radial-gradient(1px 1px at 80% 75%, white, transparent),
+        radial-gradient(2px 2px at 90% 40%, white, transparent),
+        radial-gradient(1px 1px at 15% 50%, white, transparent),
+        radial-gradient(2px 2px at 75% 85%, white, transparent),
+        radial-gradient(1px 1px at 55% 90%, white, transparent);
+    animation: stars 5s ease-in-out infinite alternate;
+}
+
+@keyframes stars {
+    from { opacity: .45; }
+    to { opacity: 1; }
+}
+
+/* ESTRELLAS FUGACES */
+.shooting-star {
+    position: absolute;
+    width: 120px;
+    height: 2px;
+    background: linear-gradient(90deg, white, transparent);
+    transform: rotate(-35deg);
+    animation: shooting 6s linear infinite;
+    opacity: 0;
+}
+
+.shooting-star:nth-child(1) {
+    top: 15%;
+    left: -10%;
+    animation-delay: 1s;
+}
+
+.shooting-star:nth-child(2) {
+    top: 40%;
+    left: -10%;
+    animation-delay: 4s;
+}
+
+@keyframes shooting {
+    0% {
+        transform: translate(0, 0) rotate(-35deg);
+        opacity: 0;
+    }
+    10% { opacity: 1; }
+    30% {
+        transform: translate(120vw, 70vh) rotate(-35deg);
+        opacity: 0;
+    }
+    100% { opacity: 0; }
+}
+
+/* PLANETA */
+.planet {
+    position: absolute;
+    width: 130px;
+    height: 130px;
+    right: 8%;
+    bottom: 12%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffb3e6, #8d3dcc 45%, #270b58 80%);
+    box-shadow:
+        0 0 30px #a14fff,
+        0 0 80px rgba(180, 70, 255, .35);
+}
+
+.planet::after {
+    content: "";
+    position: absolute;
+    width: 190px;
+    height: 45px;
+    top: 43px;
+    left: -30px;
+    border: 3px solid rgba(255, 190, 255, .55);
+    border-radius: 50%;
+    transform: rotate(-15deg);
+}
+
+/* CORAZÓN */
+.heart {
+    position: absolute;
+    top: 15%;
+    left: 12%;
+    font-size: 45px;
+    animation: heartbeat 1.5s infinite;
+    filter: drop-shadow(0 0 15px #ff4fa3);
+}
+
+@keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.25); }
+}
+
+/* MENSAJE */
+.message {
+    position: absolute;
+    z-index: 5;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(90%, 650px);
+    padding: 45px 30px;
+    text-align: center;
+
+    background: rgba(10, 2, 30, .55);
+    border: 1px solid rgba(255, 180, 240, .25);
+    border-radius: 30px;
+
+    backdrop-filter: blur(10px);
+    box-shadow:
+        0 0 50px rgba(170, 60, 255, .2),
+        inset 0 0 30px rgba(255, 100, 220, .05);
+}
+
+.message h1 {
+    font-size: clamp(38px, 7vw, 70px);
+    margin-bottom: 20px;
+    background: linear-gradient(90deg, #fff, #ffb4e6, #c69cff);
+    -webkit-background-clip: text;
+    color: transparent;
+}
+
+.message p {
+    font-size: clamp(17px, 3vw, 23px);
+    line-height: 1.7;
+    color: #eee0ff;
+}
+
+.message .love {
+    margin-top: 25px;
+    font-size: 20px;
+    color: #ff9bd7;
+}
+
+.heart-small {
+    display: inline-block;
+    animation: heartbeat 1.2s infinite;
+}
+</style>
+</head>
+
+<body>
+
+<div class="galaxy">
+
+    <div class="stars"></div>
+
+    <div class="shooting-star"></div>
+    <div class="shooting-star"></div>
+
+    <div class="heart">🩶</div>
+
+    <div class="planet"></div>
+
+    <div class="message">
+        <h1>Mi universo eres tú</h1>
+
+        <p>
+            Entre millones de estrellas,<br>
+            galaxias y planetas,<br>
+            tuve la suerte de encontrarte a ti.
+        </p>
+
+        <p class="love">
+            Te quiero hasta el infinito y más allá
+            <span class="heart-small">🩶</span>
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>
