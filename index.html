@@ -6,282 +6,152 @@
 <title>Mi universo eres tú 🩶</title>
 
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-html,body { height: 100%; }
-body { background: #02000b; font-family: Georgia, serif; color: white; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; overflow: hidden; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#02000b;font-family:Georgia,serif;color:#fff;overflow:hidden}
 
-/* BOTÓN */
-.show-galaxy-btn { position: fixed; z-index: 9999; left: 50%; bottom: 24px; transform: translateX(-50%); background: linear-gradient(90deg,#ff7ab6,#8b5cff); color: white; border: none; padding: 14px 22px; border-radius: 999px; font-size: 16px; box-shadow: 0 6px 20px rgba(139,92,255,.18); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; }
-.show-galaxy-btn:active { transform: translateX(-50%) scale(.98); }
-.show-galaxy-btn:focus { outline: 3px solid rgba(255,183,230,.25); }
+/* Simple overlay and message */
+.container{position:relative;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
+.bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, #151125 0%, #07030a 40%, #020008 100%);filter:blur(6px);opacity:.95}
+.static-galaxy{position:absolute;inset:0;pointer-events:none;}
+.message-box{position:relative;z-index:20;background:rgba(8,6,16,0.6);backdrop-filter:blur(6px);padding:28px 22px;border-radius:20px;border:1px solid rgba(255,255,255,0.06);text-align:center;max-width:820px}
+.message-box h1{font-size:clamp(28px,5vw,56px);margin-bottom:10px;color:#fff}
+.message-box p{color:#e9e1ff;margin-bottom:12px}
 
-/* GALAXIA - overlay inicial */
-.galaxy { position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; background: radial-gradient(circle at 50% 50%, #32145f 0%, #11052d 28%, #050015 65%, #010008 100%); opacity: 0; pointer-events: none; transform: scale(.98); transition: opacity .45s ease, transform .45s ease; }
-.galaxy.visible { opacity: 1; pointer-events: auto; transform: scale(1); }
-.galaxy::before { content: ""; position: absolute; width: 80vw; height: 80vw; left: 10%; top: 5%; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,80,190,.12), transparent 55%), radial-gradient(ellipse, rgba(80,120,255,.12), transparent 65%); filter: blur(28px); animation: nebula 10s ease-in-out infinite alternate; }
-@keyframes nebula { from { transform: scale(1) rotate(0deg); opacity:.55 } to { transform: scale(1.18) rotate(12deg); opacity:.95 } }
+/* Sections (buttons) placed around center to click) */
+.sections{position:absolute;inset:0;z-index:25;pointer-events:auto}
+.section-btn{position:absolute;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;backdrop-filter:blur(6px);font-size:14px}
+.section-btn:active{transform:scale(.98)}
+.section-top-left{left:6%;top:14%}
+.section-top-right{right:6%;top:14%}
+.section-bottom-left{left:6%;bottom:14%}
+.section-bottom-right{right:6%;bottom:14%}
 
-/* message box */
-.message { position: absolute; z-index: 5; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(90%,650px); padding: 36px 24px; text-align: center; background: rgba(10,2,30,.5); border: 1px solid rgba(255,180,240,.12); border-radius: 26px; backdrop-filter: blur(8px); box-shadow: 0 0 40px rgba(170,60,255,.12); }
-.message h1 { font-size: clamp(32px,6vw,60px); margin-bottom: 14px; background: linear-gradient(90deg,#fff,#ffb4e6,#c69cff); -webkit-background-clip: text; color: transparent }
-.message p { font-size: clamp(15px,3vw,20px); line-height: 1.6; color: #eee0ff }
+/* Input panel */
+.input-panel{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:30;display:flex;gap:8px;align-items:center}
+.input-panel input{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#fff;min-width:220px}
+.input-panel button{padding:10px 14px;border-radius:12px;border:none;background:linear-gradient(90deg,#ff7ab6,#8b5cff);color:#fff;cursor:pointer}
 
-/* REAL GALAXY: canvas overlay */
-.real-galaxy { position: fixed; inset: 0; z-index: 10001; display: none; background: radial-gradient(circle at 50% 50%, rgba(8,8,20,1), rgba(2,0,8,1)); }
-.real-galaxy.visible { display: block }
-#galaxyCanvas { width: 100%; height: 100%; display: block; touch-action: none; }
-.real-wrapper { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none }
-.real-message { position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); text-align:center; color: #fff; pointer-events:auto }
-.real-message h2 { font-size: clamp(22px,3.6vw,44px); color: #fff; text-shadow: 0 10px 40px rgba(255,220,180,.06), 0 2px 6px rgba(0,0,0,.6); font-weight:700 }
-.real-message .heart-grey { display:inline-block; margin-top:12px }
-.real-close { position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: #fff; padding:8px 10px; border-radius:10px; cursor:pointer; pointer-events:auto }
+/* small menu with preset phrases */
+.preset-panel{position:fixed;left:16px;top:16px;z-index:30;padding:8px;background:rgba(0,0,0,0.45);border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
+.preset-panel button{display:block;background:transparent;border:none;color:#fff;padding:8px 6px;text-align:left;cursor:pointer}
+.preset-panel button:hover{background:rgba(255,255,255,0.02);border-radius:6px}
 
-/* Galaxy in-canvas menu */
-.galaxy-menu { position: absolute; z-index: 10002; top: 16px; left: 16px; display:flex; gap:10px; pointer-events:auto }
-.menu-button { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); color: #fff; padding: 8px 12px; border-radius: 10px; cursor: pointer; backdrop-filter: blur(6px); font-size:14px }
-.menu-panel { position: absolute; z-index:10003; left: 16px; top: 62px; width: 260px; max-width: calc(100% - 40px); background: rgba(6,6,12,0.7); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 12px; color:#fff; display:none }
-.menu-panel.open { display:block }
-.menu-panel .item { padding:8px 6px; border-radius:8px; cursor:pointer }
-.menu-panel .item:hover { background: rgba(255,255,255,0.02) }
+/* toast */
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:10%;background:rgba(0,0,0,0.6);color:#fff;padding:8px 12px;border-radius:10px;display:none;z-index:60}
+.toast.show{display:block}
 
-/* small tool controls */
-.tools { position: absolute; z-index:10002; right:16px; top:16px; display:flex; gap:8px }
-.tool { background: rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.06); padding:8px; border-radius:8px; cursor:pointer }
-
-/* toast for messages */
-.toast { position: fixed; left:50%; bottom:16%; transform: translateX(-50%); background: rgba(0,0,0,0.6); color:#fff; padding: 10px 14px; border-radius: 12px; display:none; z-index:10005 }
-.toast.show { display:block }
-
-/* accessibility and reduced motion */
-@media (prefers-reduced-motion: reduce) { .galaxy::before, .message, .real-wrapper, #galaxyCanvas { transition:none !important; animation:none !important } }
+/* accessibility */
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-
 <body>
 
-<button id="toggle-galaxy" class="show-galaxy-btn" aria-controls="galaxy" aria-expanded="false">Mostrar galaxia</button>
+<div class="container">
+  <div class="bg" aria-hidden="true"></div>
 
-<div class="galaxy" id="galaxy" role="region" aria-hidden="true">
-    <button id="close-galaxy" class="real-close" aria-label="Cerrar galaxia">Cerrar ✕</button>
-    <div class="message">
-        <h1>Mi universo eres tú</h1>
-        <p>Entre millones de estrellas, galaxias y planetas, tuve la suerte de encontrarte a ti.</p>
-        <p class="love">Te quiero hasta el infinito y más allá <span class="heart-small">🩶</span></p>
-        <button id="open-real-galaxy" class="menu-button" aria-haspopup="true">Ver galaxia real</button>
-    </div>
+  <!-- Static procedural-looking SVG galaxy (non-moving) -->
+  <svg class="static-galaxy" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <radialGradient id="g1" cx="50%" cy="45%" r="40%">
+        <stop offset="0%" stop-color="#fff7e6" stop-opacity="0.9"/>
+        <stop offset="20%" stop-color="#ffd8c8" stop-opacity="0.55"/>
+        <stop offset="45%" stop-color="#bfa0ff" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="#020007" stop-opacity="0.0"/>
+      </radialGradient>
+      <filter id="blur" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="24" />
+      </filter>
+    </defs>
+
+    <!-- soft glow core -->
+    <circle cx="600" cy="360" r="160" fill="url(#g1)"/>
+    <!-- colored blobs to simulate arms -->
+    <g filter="url(#blur)">
+      <ellipse cx="420" cy="360" rx="260" ry="80" fill="#2b2b45" opacity="0.22" transform="rotate(-12 420 360)"/>
+      <ellipse cx="770" cy="380" rx="280" ry="88" fill="#2b1e3a" opacity="0.16" transform="rotate(16 770 380)"/>
+      <ellipse cx="560" cy="240" rx="160" ry="48" fill="#3a2550" opacity="0.12" transform="rotate(-26 560 240)"/>
+      <ellipse cx="640" cy="520" rx="200" ry="60" fill="#2b3a4a" opacity="0.10" transform="rotate(8 640 520)"/>
+    </g>
+
+    <!-- subtle stars - static -->
+    <g fill="#ffffff" opacity="0.95">
+      <circle cx="120" cy="80" r="1"/>
+      <circle cx="300" cy="40" r="1.4" opacity="0.9"/>
+      <circle cx="980" cy="120" r="1"/>
+      <circle cx="840" cy="60" r="0.9"/>
+      <circle cx="420" cy="120" r="1.1"/>
+      <circle cx="540" cy="20" r="0.8"/>
+      <circle cx="1100" cy="400" r="1"/>
+      <circle cx="200" cy="520" r="0.9"/>
+      <circle cx="760" cy="700" r="1.1"/>
+      <circle cx="940" cy="480" r="0.9"/>
+    </g>
+  </svg>
+
+  <div class="message-box" role="region" aria-live="polite">
+    <h1 id="headline">Te amo hasta el infinito</h1>
+    <p id="subline">Pulsa cualquiera de los apartados alrededor para ver frases bonitas. También puedes escribir tu propio mensaje aquí abajo.</p>
+  </div>
+
+  <!-- clickable sections placed around -->
+  <div class="sections" aria-hidden="false">
+    <button class="section-btn section-top-left" data-msg="Eres mi luz">Eres mi luz</button>
+    <button class="section-btn section-top-right" data-msg="Mi cielo">Mi cielo</button>
+    <button class="section-btn section-bottom-left" data-msg="Siempre contigo">Siempre contigo</button>
+    <button class="section-btn section-bottom-right" data-msg="Hasta el infinito">Hasta el infinito</button>
+  </div>
+
 </div>
 
-<div class="real-galaxy" id="realGalaxy" aria-hidden="true">
-    <canvas id="galaxyCanvas" aria-label="Galaxia animada"></canvas>
+<!-- Presets and input -->
+<div class="preset-panel" role="toolbar" aria-label="Frases rápidas">
+  <button data-msg="Eres mi sol">Eres mi sol</button>
+  <button data-msg="Mi razón">Mi razón</button>
+  <button data-msg="Contigo siempre">Contigo siempre</button>
+</div>
 
-    <!-- in-canvas UI (outside canvas but overlays) -->
-    <div class="galaxy-menu" aria-hidden="false">
-        <button id="menu-btn" class="menu-button" aria-expanded="false">Menú</button>
-        <div id="menu-panel" class="menu-panel" role="menu" aria-hidden="true">
-            <div class="item" data-msg="Eres mi luz">Eres mi luz</div>
-            <div class="item" data-msg="Mi cielo" >Mi cielo</div>
-            <div class="item" data-msg="Siempre contigo">Siempre contigo</div>
-            <div class="item" data-msg="Hasta el infinito">Hasta el infinito</div>
-        </div>
-    </div>
-
-    <div class="tools" aria-hidden="false">
-        <button id="zoom-in" class="tool" aria-label="Acercar">＋</button>
-        <button id="zoom-out" class="tool" aria-label="Alejar">－</button>
-        <button id="reset-view" class="tool" aria-label="Restablecer">⤾</button>
-    </div>
-
-    <div class="real-wrapper" aria-hidden="true">
-        <div class="real-message" role="status">
-            <h2 id="headline">Te amo hasta el infinito</h2>
-            <div class="heart-grey" aria-hidden="true">
-                <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M12 21s-7.5-4.9-9.2-8.1C.7 9.9 4.3 6 7.1 6c1.6 0 2.5 1.1 2.9 1.7.4-.6 1.3-1.7 2.9-1.7 2.8 0 6.4 3.9 4.3 6.9C19.5 16.1 12 21 12 21z" fill="#cfcfcf" />
-                </svg>
-            </div>
-        </div>
-    </div>
-
-    <button id="close-real" class="real-close" aria-label="Cerrar vista de galaxia">Cerrar ✕</button>
+<div class="input-panel" role="form" aria-label="Escribe tu mensaje">
+  <input id="customInput" type="text" placeholder="Escribe algo bonito..." aria-label="Mensaje personalizado" />
+  <button id="applyCustom">Poner mensaje</button>
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
-    // UI references
-    var toggle = document.getElementById('toggle-galaxy');
-    var galaxy = document.getElementById('galaxy');
-    var closeGalaxyBtn = document.getElementById('close-galaxy');
-    var openRealBtn = document.getElementById('open-real-galaxy');
-    var real = document.getElementById('realGalaxy');
-    var closeReal = document.getElementById('close-real');
-    var menuBtn = document.getElementById('menu-btn');
-    var menuPanel = document.getElementById('menu-panel');
-    var toast = document.getElementById('toast');
-    var headline = document.getElementById('headline');
+  var headline = document.getElementById('headline');
+  var subline = document.getElementById('subline');
+  var sections = document.querySelectorAll('.section-btn');
+  var presets = document.querySelectorAll('.preset-panel button');
+  var input = document.getElementById('customInput');
+  var apply = document.getElementById('applyCustom');
+  var toast = document.getElementById('toast');
 
-    // Canvas and rendering state
-    var canvas = document.getElementById('galaxyCanvas');
-    var ctx = canvas.getContext('2d');
-    var off = document.createElement('canvas');
-    var offCtx = off.getContext('2d');
+  function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 2200); }
 
-    var particles = [];
-    var starfield = [];
-    var animId = null;
-    var running = false;
-    var rotation = 0;
+  function setHeadline(text){
+    headline.textContent = text;
+    subline.textContent = "Que la galaxia siempre nos recuerde esto 💫";
+    showToast('Mensaje aplicado');
+  }
 
-    // Pan & Zoom state
-    var scale = 1; var minScale = 0.6; var maxScale = 3; var offsetX = 0; var offsetY = 0;
-    var isPanning = false; var lastPointer = null; var pointers = [];
+  sections.forEach(function(btn){
+    btn.addEventListener('click', function(){ var m = btn.getAttribute('data-msg') || btn.textContent; setHeadline(m); });
+  });
 
-    function showToast(msg, time){
-        toast.textContent = msg; toast.classList.add('show');
-        setTimeout(function(){ toast.classList.remove('show'); }, time || 2200);
-    }
+  presets.forEach(function(btn){ btn.addEventListener('click', function(){ setHeadline(btn.getAttribute('data-msg')); }); });
 
-    // Accessibility shortcuts
-    toggle.addEventListener('click', function(){ if (galaxy.classList.contains('visible')) hideGalaxy(); else showGalaxy(); });
-    closeGalaxyBtn.addEventListener('click', hideGalaxy);
-    function showGalaxy(){ galaxy.classList.add('visible'); galaxy.setAttribute('aria-hidden','false'); toggle.setAttribute('aria-expanded','true'); toggle.textContent = 'Ocultar galaxia'; }
-    function hideGalaxy(){ galaxy.classList.remove('visible'); galaxy.setAttribute('aria-hidden','true'); toggle.setAttribute('aria-expanded','false'); toggle.textContent = 'Mostrar galaxia'; toggle.focus(); }
+  apply.addEventListener('click', function(){ var v = input.value.trim(); if(!v){ showToast('Escribe algo primero 😊'); input.focus(); return; } setHeadline(v); input.value=''; });
 
-    openRealBtn.addEventListener('click', function(){ hideGalaxy(); showReal(); });
-    closeReal.addEventListener('click', hideReal);
-    function showReal(){ real.classList.add('visible'); real.setAttribute('aria-hidden','false'); startGalaxy(); }
-    function hideReal(){ real.classList.remove('visible'); real.setAttribute('aria-hidden','true'); stopGalaxy(); toggle.focus(); }
+  // keyboard for quick apply (Enter)
+  input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ apply.click(); } });
 
-    // Menu interactions
-    menuBtn.addEventListener('click', function(){ var open = menuPanel.classList.toggle('open'); menuBtn.setAttribute('aria-expanded', open); menuPanel.setAttribute('aria-hidden', !open); });
-    menuPanel.addEventListener('click', function(e){ var it = e.target.closest('.item'); if (!it) return; var msg = it.getAttribute('data-msg'); headline.textContent = msg; showToast(msg); menuPanel.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); menuPanel.setAttribute('aria-hidden','true'); });
+  // remove any moving animations if present and ensure static experience
+  try{ document.querySelectorAll('canvas').forEach(function(c){ c.style.display='none'; }); } catch(e){}
 
-    // Tool buttons: zoom in/out/reset
-    document.getElementById('zoom-in').addEventListener('click', function(){ zoomAt(window.innerWidth/2, window.innerHeight/2, 1.12); });
-    document.getElementById('zoom-out').addEventListener('click', function(){ zoomAt(window.innerWidth/2, window.innerHeight/2, 1/1.12); });
-    document.getElementById('reset-view').addEventListener('click', function(){ scale = 1; offsetX = 0; offsetY = 0; showToast('Vista restablecida'); });
-
-    // Resize handling
-    function resize(){ var ratio = window.devicePixelRatio || 1; canvas.width = Math.round(window.innerWidth * ratio); canvas.height = Math.round(window.innerHeight * ratio); canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px'; ctx.setTransform(ratio,0,0,ratio,0,0); off.width = canvas.width; off.height = canvas.height; offCtx.setTransform(ratio,0,0,ratio,0,0); }
-    window.addEventListener('resize', function(){ if (real.classList.contains('visible')) { resize(); createParticles(); } else resize(); });
-
-    function createParticles(){
-        particles = []; starfield = [];
-        var w = window.innerWidth; var h = window.innerHeight; var cx = 0; var cy = 0; var maxR = Math.min(w,h) * 0.48; var arms = 4;
-        var baseDensity = Math.floor((w*h)/1300);
-        var density = Math.min(Math.max(900, baseDensity), 2500); // cap for performance
-        if (w < 520) density = Math.min(density, 900);
-        for (var i=0;i<density;i++){
-            var arm = i % arms; var rr = Math.pow(Math.random(), 1.15) * maxR; var baseTheta = rr * 0.02 + arm * (2*Math.PI/arms); var theta = baseTheta + (Math.random()-0.5) * (1.1 - rr/maxR);
-            var size = Math.max(0.25, 1.6 * (1 - rr/maxR) * (0.5+Math.random())); var hue = 35 + Math.random()*70 - (rr/maxR)*50; var a = 0.5 + Math.random()*0.5;
-            particles.push({rr:rr,theta:theta,size:size,hue:hue,a:a,off:Math.random()*2000});
-        }
-        var stars = Math.min(700, Math.floor((w*h)/16000));
-        for (var s=0;s<stars;s++){ starfield.push({x:Math.random()*w, y:Math.random()*h, r:Math.random()*1.2, phase: Math.random()*Math.PI*2}); }
-    }
-
-    // Procedural texture
-    function generateTexture(ctx2, w, h){ ctx2.clearRect(0,0,w,h); var rg = ctx2.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.min(w,h)*0.6); rg.addColorStop(0, 'rgba(255,245,220,0.12)'); rg.addColorStop(0.12, 'rgba(255,230,200,0.05)'); rg.addColorStop(0.5, 'rgba(20,10,40,0.06)'); rg.addColorStop(1, 'rgba(0,0,0,1)'); ctx2.fillStyle = rg; ctx2.fillRect(0,0,w,h);
-        var blobs = 14; for (var i=0;i<blobs;i++){ var angle = Math.random()*Math.PI*2; var dist = Math.random()*Math.min(w,h)*0.35; var bx = w/2 + Math.cos(angle) * dist * (0.3 + Math.random()*0.9); var by = h/2 + Math.sin(angle) * dist * (0.3 + Math.random()*0.9); var br = (Math.random()*0.35 + 0.06) * Math.min(w,h); var hue = 30 + Math.random()*80; var g = ctx2.createRadialGradient(bx,by,0,bx,by,br); g.addColorStop(0, 'hsla(' + hue + ', 80%, 60%, ' + (0.14 + Math.random()*0.14) + ')'); g.addColorStop(0.5, 'rgba(80,80,120,0.05)'); g.addColorStop(1, 'rgba(0,0,0,0)'); ctx2.fillStyle = g; ctx2.beginPath(); ctx2.arc(bx,by,br,0,Math.PI*2); ctx2.fill(); }
-        ctx2.globalCompositeOperation = 'lighter'; for (var n=0;n<900;n++){ var nx = Math.random()*w; var ny = Math.random()*h; var nr = Math.random()*1.1; ctx2.fillStyle = 'rgba(255,255,255,' + (Math.random()*0.05) + ')'; ctx2.beginPath(); ctx2.arc(nx,ny,nr,0,Math.PI*2); ctx2.fill(); } ctx2.globalCompositeOperation = 'source-over'; ctx2.save(); ctx2.translate(w/2,h/2); ctx2.rotate(0.18); ctx2.fillStyle = 'rgba(0,0,0,0.14)'; ctx2.beginPath(); ctx2.ellipse(0,0,Math.min(w,h)*0.6, Math.min(w,h)*0.12, 0, 0, Math.PI*2); ctx2.fill(); ctx2.restore(); }
-
-    // Drawing with pan/zoom: use center = (w/2 + offsetX, h/2 + offsetY)
-    function draw(){
-        var w = canvas.width / (window.devicePixelRatio || 1); var h = canvas.height / (window.devicePixelRatio || 1);
-        ctx.clearRect(0,0,w,h); ctx.fillStyle = '#000006'; ctx.fillRect(0,0,w,h);
-
-        // prepare offscreen texture
-        if (off.width !== canvas.width || off.height !== canvas.height) { off.width = canvas.width; off.height = canvas.height; offCtx.setTransform(window.devicePixelRatio||1,0,0,window.devicePixelRatio||1,0,0); }
-        generateTexture(offCtx, w, h);
-
-        // gentle bloom pass (not extreme to avoid flashes)
-        try { ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.filter = 'blur(10px) contrast(1.02)'; ctx.globalAlpha = 0.9; ctx.drawImage(off, 0, 0, w, h); ctx.filter = 'blur(22px) brightness(1.05)'; ctx.globalAlpha = 0.32; ctx.drawImage(off, 0, 0, w, h); ctx.filter = 'none'; ctx.globalAlpha = 1; ctx.restore(); } catch (e) { ctx.globalCompositeOperation = 'lighter'; ctx.drawImage(off, 0,0,w,h); ctx.globalCompositeOperation = 'source-over'; }
-
-        // subtle vignette
-        var vign = ctx.createRadialGradient(w/2,h/2, Math.min(w,h)*0.18, w/2,h/2, Math.min(w,h)*0.9); vign.addColorStop(0, 'rgba(255,255,255,0)'); vign.addColorStop(1, 'rgba(0,0,0,0.42)'); ctx.fillStyle = vign; ctx.fillRect(0,0,w,h);
-
-        // starfield background (deterministic twinkle to avoid flashes)
-        ctx.globalCompositeOperation = 'lighter';
-        var t = Date.now();
-        for (var s=0;s<starfield.length;s++){
-            var st = starfield[s]; var tw = 0.45 + 0.35*Math.sin(t*0.0004 + st.phase); ctx.globalAlpha = st.r>0.9 ? st.r*tw : tw*0.9; ctx.beginPath(); ctx.arc(st.x, st.y, Math.max(0.2, st.r), 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill(); }
-        ctx.globalAlpha = 1;
-
-        // compute center with pan offsets
-        var cx = w/2 + offsetX, cy = h/2 + offsetY;
-
-        // particles (sharp) on top with scale
-        ctx.globalCompositeOperation = 'lighter';
-        for (var i=0;i<particles.length;i++){
-            var p = particles[i]; p.theta += 0.0007 + (p.rr / (Math.min(w,h))) * 0.00045;
-            var px = cx + (Math.cos(p.theta + rotation) * p.rr) * scale;
-            var py = cy + (Math.sin(p.theta + rotation) * p.rr) * scale;
-            var size = Math.max(0.18, p.size * (0.6 + 0.5 * Math.sin((Date.now()+p.off)/900)) ) * scale;
-            var g = ctx.createRadialGradient(px,py,0,px,py,size*3);
-            g.addColorStop(0, 'rgba(255,255,255,0.92)');
-            g.addColorStop(0.22, 'hsla(' + Math.round(p.hue) + ',82%,' + (52 - (p.rr/(Math.min(w,h))*28)) + '%, ' + (Math.min(1,p.a+0.12)) + ')');
-            g.addColorStop(1, 'rgba(0,0,0,0)');
-            ctx.fillStyle = g; ctx.beginPath(); ctx.arc(px,py, Math.max(0.15, size*0.9), 0, Math.PI*2); ctx.fill();
-        }
-
-        // core sharp (apply scale and offset)
-        var coreRad = (Math.min(w,h) * 0.07 + Math.abs(Math.sin(Date.now()/1600))*Math.min(w,h)*0.006) * scale;
-        var core = ctx.createRadialGradient(cx,cy,0,cx,cy,coreRad);
-        core.addColorStop(0,'rgba(255,250,230,1)'); core.addColorStop(0.12,'rgba(255,235,200,0.95)'); core.addColorStop(0.28,'rgba(255,210,160,0.26)'); core.addColorStop(1,'rgba(0,0,0,0)');
-        ctx.globalCompositeOperation = 'lighter'; ctx.fillStyle = core; ctx.beginPath(); ctx.arc(cx,cy, coreRad, 0, Math.PI*2); ctx.fill();
-
-        // foreground bright stars (small, deterministic)
-        for (var s=0;s<90;s++){
-            var sx = (s*53.7 % w); var sy = (s*97.3 % h); var phase = (s*17.1) % 1000; var sr = 0.35 + 0.9*Math.abs(Math.sin((Date.now()+phase)/800));
-            ctx.fillStyle = 'rgba(255,255,255,' + (0.18 + 0.25*Math.sin((Date.now()+phase)/900)) + ')'; ctx.beginPath(); ctx.arc(sx, sy, Math.max(0.2, sr*scale), 0, Math.PI*2); ctx.fill(); }
-
-        rotation += 0.0009; animId = requestAnimationFrame(draw);
-    }
-
-    function startGalaxy(){ if (running) return; running = true; resize(); createParticles(); animId = requestAnimationFrame(draw); }
-    function stopGalaxy(){ running = false; if (animId) cancelAnimationFrame(animId); animId = null; ctx && ctx.clearRect(0,0,canvas.width,canvas.height); offCtx && offCtx.clearRect(0,0,off.width,off.height); }
-
-    // Zoom helper (zoom at point)
-    function zoomAt(px, py, factor){ var oldScale = scale; var newScale = Math.max(minScale, Math.min(maxScale, scale * factor)); if (Math.abs(newScale - scale) < 0.0001) return; // compute world coord
-        var w = canvas.width / (window.devicePixelRatio || 1); var h = canvas.height / (window.devicePixelRatio || 1);
-        var cx = w/2 + offsetX, cy = h/2 + offsetY; var wx = (px - cx) / oldScale; var wy = (py - cy) / oldScale; scale = newScale; offsetX = px - wx * scale - w/2; offsetY = py - wy * scale - h/2; showToast((scale>1? 'Acercado':'Alejado') ); }
-
-    // Pointer events for pan and pinch zoom
-    canvas.addEventListener('pointerdown', function(e){ canvas.setPointerCapture(e.pointerId); pointers.push(e); if (pointers.length===1){ isPanning=true; lastPointer = {x:e.clientX, y:e.clientY}; } else { isPanning=false; } });
-    canvas.addEventListener('pointermove', function(e){ for (var i=0;i<pointers.length;i++){ if (pointers[i].pointerId===e.pointerId) { pointers[i]=e; break; } }
-        if (pointers.length===1 && lastPointer && e.pointerId===pointers[0].pointerId){ var dx = e.clientX - lastPointer.x; var dy = e.clientY - lastPointer.y; offsetX += dx; offsetY += dy; lastPointer = {x:e.clientX, y:e.clientY}; }
-        else if (pointers.length===2){ // pinch
-            var a = pointers[0], b = pointers[1]; var dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY); var midX = (a.clientX + b.clientX)/2; var midY = (a.clientY + b.clientY)/2;
-            if (!canvas._pinchStart){ canvas._pinchStart = {dist: dist, scale: scale, midX: midX, midY: midY}; }
-            var sFactor = dist / canvas._pinchStart.dist; var target = canvas._pinchStart.scale * sFactor; target = Math.max(minScale, Math.min(maxScale, target)); zoomAt(midX, midY, target/scale);
-        }
-    });
-    canvas.addEventListener('pointerup', function(e){ canvas.releasePointerCapture(e.pointerId); // remove pointer
-        for (var i=0;i<pointers.length;i++){ if (pointers[i].pointerId===e.pointerId) pointers.splice(i,1); }
-        if (pointers.length<2) canvas._pinchStart = null; if (pointers.length===0){ isPanning=false; lastPointer=null; }
-    });
-    canvas.addEventListener('pointercancel', function(e){ canvas.dispatchEvent(new PointerEvent('pointerup', e)); });
-
-    // Wheel zoom
-    canvas.addEventListener('wheel', function(e){ e.preventDefault(); var delta = e.deltaY > 0 ? 0.92 : 1.09; zoomAt(e.clientX, e.clientY, delta); }, {passive:false});
-
-    // Buttons to zoom by center as fallback
-    document.getElementById('zoom-in').addEventListener('click', function(){ zoomAt(window.innerWidth/2, window.innerHeight/2, 1.12); });
-    document.getElementById('zoom-out').addEventListener('click', function(){ zoomAt(window.innerWidth/2, window.innerHeight/2, 1/1.12); });
-
-    // keyboard controls
-    document.addEventListener('keydown', function(e){ if (!real.classList.contains('visible')) return; if (e.key === 'Escape') hideReal(); if (e.key === '+' || e.key === '=') zoomAt(window.innerWidth/2, window.innerHeight/2, 1.12); if (e.key === '-') zoomAt(window.innerWidth/2, window.innerHeight/2, 1/1.12); if (e.key === 'ArrowUp') offsetY += 30; if (e.key === 'ArrowDown') offsetY -= 30; if (e.key === 'ArrowLeft') offsetX += 30; if (e.key === 'ArrowRight') offsetX -= 30; });
-
-    // prevent extreme brightness: cap alpha values and avoid random full-intensity flashes
-
-    // start paused; real starts when user opens it
-    // respect reduced motion
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){ /* keep animations minimal */ }
-
-    // expose simple API in window for debugging (optional)
-    window._galaxy = { start: startGalaxy, stop: stopGalaxy, zoomAt: zoomAt };
-
+  // initial friendly toast
+  setTimeout(function(){ showToast('Pulsa los apartados para ver frases bonitas'); }, 700);
 })();
 </script>
 
