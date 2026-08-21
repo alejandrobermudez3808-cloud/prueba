@@ -6,260 +6,51 @@
 <title>Mi universo eres tú 🩶</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    height: 100vh;
-    background: #02000b;
-    font-family: Georgia, serif;
-    color: white;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { height: 100vh; background: #02000b; font-family: Georgia, serif; color: white; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
 /* BOTÓN */
-.show-galaxy-btn {
-    position: fixed;
-    z-index: 9999;
-    left: 50%;
-    bottom: 24px;
-    transform: translateX(-50%);
-    background: linear-gradient(90deg,#ff7ab6,#8b5cff);
-    color: white;
-    border: none;
-    padding: 14px 22px;
-    border-radius: 999px;
-    font-size: 16px;
-    box-shadow: 0 6px 20px rgba(139,92,255,.18);
-    cursor: pointer;
-    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
-}
+.show-galaxy-btn { position: fixed; z-index: 9999; left: 50%; bottom: 24px; transform: translateX(-50%); background: linear-gradient(90deg,#ff7ab6,#8b5cff); color: white; border: none; padding: 14px 22px; border-radius: 999px; font-size: 16px; box-shadow: 0 6px 20px rgba(139,92,255,.18); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease; }
 .show-galaxy-btn:active { transform: translateX(-50%) scale(.98); }
 .show-galaxy-btn:focus { outline: 3px solid rgba(255,183,230,.25); }
 
-/* GALAXIA - inicialmente oculta */
-.galaxy {
-    position: fixed;
-    inset: 0;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-    background:
-        radial-gradient(circle at 50% 50%, #32145f 0%, #11052d 28%, #050015 65%, #010008 100%);
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(.98);
-    transition: opacity .6s ease, transform .6s ease;
-}
-.galaxy.visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: scale(1);
-}
-
-/* Nebulosa */
-.galaxy::before {
-    content: "";
-    position: absolute;
-    width: 80vw;
-    height: 80vw;
-    left: 10%;
-    top: 5%;
-    border-radius: 50%;
-    background:
-        radial-gradient(ellipse, rgba(255, 80, 190, .18), transparent 55%),
-        radial-gradient(ellipse, rgba(80, 120, 255, .18), transparent 65%);
-    filter: blur(35px);
-    animation: nebula 8s ease-in-out infinite alternate;
-}
-
-@keyframes nebula {
-    from {
-        transform: scale(1) rotate(0deg);
-        opacity: .6;
-    }
-    to {
-        transform: scale(1.25) rotate(15deg);
-        opacity: 1;
-    }
-}
-
-/* ESTRELLAS */
-.stars {
-    position: absolute;
-    inset: 0;
-    background-image:
-        radial-gradient(2px 2px at 10% 20%, white, transparent),
-        radial-gradient(1px 1px at 20% 70%, white, transparent),
-        radial-gradient(2px 2px at 30% 30%, white, transparent),
-        radial-gradient(1px 1px at 40% 80%, white, transparent),
-        radial-gradient(2px 2px at 50% 15%, white, transparent),
-        radial-gradient(1px 1px at 60% 60%, white, transparent),
-        radial-gradient(2px 2px at 70% 25%, white, transparent),
-        radial-gradient(1px 1px at 80% 75%, white, transparent),
-        radial-gradient(2px 2px at 90% 40%, white, transparent),
-        radial-gradient(1px 1px at 15% 50%, white, transparent),
-        radial-gradient(2px 2px at 75% 85%, white, transparent),
-        radial-gradient(1px 1px at 55% 90%, white, transparent);
-    animation: stars 5s ease-in-out infinite alternate;
-}
-
-@keyframes stars {
-    from { opacity: .45; }
-    to { opacity: 1; }
-}
-
-/* ESTRELLAS FUGACES */
-.shooting-star {
-    position: absolute;
-    width: 120px;
-    height: 2px;
-    background: linear-gradient(90deg, white, transparent);
-    transform: rotate(-35deg);
-    animation: shooting 6s linear infinite;
-    opacity: 0;
-}
-
-.shooting-star:nth-child(1) {
-    top: 15%;
-    left: -10%;
-    animation-delay: 1s;
-}
-
-.shooting-star:nth-child(2) {
-    top: 40%;
-    left: -10%;
-    animation-delay: 4s;
-}
-
-@keyframes shooting {
-    0% {
-        transform: translate(0, 0) rotate(-35deg);
-        opacity: 0;
-    }
-    10% { opacity: 1; }
-    30% {
-        transform: translate(120vw, 70vh) rotate(-35deg);
-        opacity: 0;
-    }
-    100% { opacity: 0; }
-}
-
-/* PLANETA */
-.planet {
-    position: absolute;
-    width: 130px;
-    height: 130px;
-    right: 8%;
-    bottom: 12%;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffb3e6, #8d3dcc 45%, #270b58 80%);
-    box-shadow:
-        0 0 30px #a14fff,
-        0 0 80px rgba(180, 70, 255, .35);
-}
-
-.planet::after {
-    content: "";
-    position: absolute;
-    width: 190px;
-    height: 45px;
-    top: 43px;
-    left: -30px;
-    border: 3px solid rgba(255, 190, 255, .55);
-    border-radius: 50%;
-    transform: rotate(-15deg);
-}
-
-/* CORAZÓN */
-.heart {
-    position: absolute;
-    top: 15%;
-    left: 12%;
-    font-size: 45px;
-    animation: heartbeat 1.5s infinite;
-    filter: drop-shadow(0 0 15px #ff4fa3);
-}
-
-@keyframes heartbeat {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.25); }
-}
-
-/* MENSAJE */
-.message {
-    position: absolute;
-    z-index: 5;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: min(90%, 650px);
-    padding: 45px 30px;
-    text-align: center;
-
-    background: rgba(10, 2, 30, .55);
-    border: 1px solid rgba(255, 180, 240, .25);
-    border-radius: 30px;
-
-    backdrop-filter: blur(10px);
-    box-shadow:
-        0 0 50px rgba(170, 60, 255, .2),
-        inset 0 0 30px rgba(255, 100, 220, .05);
-}
-
-.message h1 {
-    font-size: clamp(38px, 7vw, 70px);
-    margin-bottom: 20px;
-    background: linear-gradient(90deg, #fff, #ffb4e6, #c69cff);
-    -webkit-background-clip: text;
-    color: transparent;
-}
-
-.message p {
-    font-size: clamp(17px, 3vw, 23px);
-    line-height: 1.7;
-    color: #eee0ff;
-}
-
-.message .love {
-    margin-top: 25px;
-    font-size: 20px;
-    color: #ff9bd7;
-}
-
-.heart-small {
-    display: inline-block;
-    animation: heartbeat 1.2s infinite;
-}
+/* GALAXIA - overlay inicial */
+.galaxy { position: fixed; inset: 0; width: 100vw; height: 100vh; overflow: hidden; background: radial-gradient(circle at 50% 50%, #32145f 0%, #11052d 28%, #050015 65%, #010008 100%); opacity: 0; pointer-events: none; transform: scale(.98); transition: opacity .6s ease, transform .6s ease; }
+.galaxy.visible { opacity: 1; pointer-events: auto; transform: scale(1); }
+.galaxy::before { content: ""; position: absolute; width: 80vw; height: 80vw; left: 10%; top: 5%; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,80,190,.18), transparent 55%), radial-gradient(ellipse, rgba(80,120,255,.18), transparent 65%); filter: blur(35px); animation: nebula 8s ease-in-out infinite alternate; }
+@keyframes nebula { from { transform: scale(1) rotate(0deg); opacity:.6 } to { transform: scale(1.25) rotate(15deg); opacity:1 } }
+.stars { position: absolute; inset: 0; background-image: radial-gradient(2px 2px at 10% 20%, white, transparent), radial-gradient(1px 1px at 20% 70%, white, transparent), radial-gradient(2px 2px at 30% 30%, white, transparent), radial-gradient(1px 1px at 40% 80%, white, transparent), radial-gradient(2px 2px at 50% 15%, white, transparent), radial-gradient(1px 1px at 60% 60%, white, transparent), radial-gradient(2px 2px at 70% 25%, white, transparent), radial-gradient(1px 1px at 80% 75%, white, transparent), radial-gradient(2px 2px at 90% 40%, white, transparent), radial-gradient(1px 1px at 15% 50%, white, transparent), radial-gradient(2px 2px at 75% 85%, white, transparent), radial-gradient(1px 1px at 55% 90%, white, transparent); animation: stars 5s ease-in-out infinite alternate; }
+@keyframes stars { from { opacity: .45 } to { opacity: 1 } }
+.shooting-star { position: absolute; width: 120px; height: 2px; background: linear-gradient(90deg, white, transparent); transform: rotate(-35deg); animation: shooting 6s linear infinite; opacity: 0 }
+.shooting-star:nth-child(1) { top: 15%; left: -10%; animation-delay: 1s }
+.shooting-star:nth-child(2) { top: 40%; left: -10%; animation-delay: 4s }
+@keyframes shooting { 0% { transform: translate(0,0) rotate(-35deg); opacity:0 } 10% { opacity:1 } 30% { transform: translate(120vw,70vh) rotate(-35deg); opacity:0 } 100% { opacity:0 } }
+.planet { position: absolute; width: 130px; height: 130px; right: 8%; bottom: 12%; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffb3e6, #8d3dcc 45%, #270b58 80%); box-shadow: 0 0 30px #a14fff, 0 0 80px rgba(180,70,255,.35); }
+.planet::after { content: ""; position: absolute; width: 190px; height: 45px; top: 43px; left: -30px; border: 3px solid rgba(255,190,255,.55); border-radius: 50%; transform: rotate(-15deg); }
+.heart { position: absolute; top: 15%; left: 12%; font-size: 45px; animation: heartbeat 1.5s infinite; filter: drop-shadow(0 0 15px #ff4fa3); }
+@keyframes heartbeat { 0%,100%{ transform: scale(1) } 50% { transform: scale(1.25) } }
+.message { position: absolute; z-index: 5; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(90%,650px); padding: 45px 30px; text-align: center; background: rgba(10,2,30,.55); border: 1px solid rgba(255,180,240,.25); border-radius: 30px; backdrop-filter: blur(10px); box-shadow: 0 0 50px rgba(170,60,255,.2), inset 0 0 30px rgba(255,100,220,.05); }
+.message h1 { font-size: clamp(38px,7vw,70px); margin-bottom: 20px; background: linear-gradient(90deg,#fff,#ffb4e6,#c69cff); -webkit-background-clip: text; color: transparent }
+.message p { font-size: clamp(17px,3vw,23px); line-height: 1.7; color: #eee0ff }
+.message .love { margin-top: 25px; font-size: 20px; color: #ff9bd7 }
+.heart-small { display: inline-block; animation: heartbeat 1.2s infinite }
+.message .real-btn { margin-top: 18px; display: inline-block; background: rgba(255,255,255,.06); color: #fff; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,.06); cursor: pointer }
 
 /* BOTÓN CERRAR (para móvil) */
-.close-btn {
-    position: fixed;
-    z-index: 10000;
-    top: 18px;
-    right: 18px;
-    background: rgba(0,0,0,.35);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,.08);
-    padding: 8px 10px;
-    border-radius: 10px;
-    backdrop-filter: blur(6px);
-    cursor: pointer;
-    display: none;
-}
-.galaxy.visible .close-btn { display: block; }
+.close-btn { position: fixed; z-index: 10000; top: 18px; right: 18px; background: rgba(0,0,0,.35); color: #fff; border: 1px solid rgba(255,255,255,.08); padding: 8px 10px; border-radius: 10px; backdrop-filter: blur(6px); cursor: pointer; display: none }
+.galaxy.visible .close-btn { display: block }
 
-@media (prefers-reduced-motion: reduce) {
-    .galaxy::before,
-    .stars,
-    .shooting-star,
-    .heart,
-    .heart-small { animation: none !important; }
-}
+/* REAL GALAXY: canvas overlay */
+.real-galaxy { position: fixed; inset: 0; z-index: 10001; display: none; background: radial-gradient(circle at 50% 50%, rgba(8,8,20,1), rgba(2,0,8,1)); }
+.real-galaxy.visible { display: block }
+#galaxyCanvas { width: 100%; height: 100%; display: block }
+.real-wrapper { position: absolute; inset: 0; display:flex; align-items:center; justify-content:center; pointer-events:none }
+.real-message { position: absolute; bottom: 8%; left: 50%; transform: translateX(-50%); text-align:center; color: #eee; pointer-events:auto }
+.real-message h2 { font-size: clamp(20px,4vw,42px); color: #ffe; text-shadow: 0 8px 40px rgba(255,240,200,.08), 0 2px 6px rgba(0,0,0,.6) }
+.real-message .heart-grey { display:inline-block; font-size: 36px; color: #cfcfcf; filter: drop-shadow(0 6px 18px rgba(0,0,0,.6)) }
+.real-close { position: absolute; top: 18px; right: 18px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.06); color: #fff; padding:8px 10px; border-radius:10px; cursor:pointer; pointer-events:auto }
+
+@media (prefers-reduced-motion: reduce) { .galaxy::before, .stars, .shooting-star, .heart, .heart-small { animation: none !important } }
 </style>
 </head>
 
@@ -294,8 +85,22 @@ body {
             Te quiero hasta el infinito y más allá
             <span class="heart-small" aria-hidden="true">🩶</span>
         </p>
+
+        <button id="open-real-galaxy" class="real-btn" aria-haspopup="true">Ver galaxia real</button>
     </div>
 
+</div>
+
+<!-- Realistic animated galaxy overlay -->
+<div class="real-galaxy" id="realGalaxy" aria-hidden="true">
+    <canvas id="galaxyCanvas"></canvas>
+    <div class="real-wrapper" aria-hidden="true">
+        <div class="real-message" role="status">
+            <h2>Te amo hasta el infinito</h2>
+            <div class="heart-grey">💔</div>
+        </div>
+    </div>
+    <button id="close-real" class="real-close" aria-label="Cerrar vista de galaxia">Cerrar ✕</button>
 </div>
 
 <script>
@@ -303,16 +108,16 @@ body {
     var toggle = document.getElementById('toggle-galaxy');
     var galaxy = document.getElementById('galaxy');
     var closeBtn = document.getElementById('close-galaxy');
+    var openReal = document.getElementById('open-real-galaxy');
+    var real = document.getElementById('realGalaxy');
+    var closeReal = document.getElementById('close-real');
 
     function showGalaxy() {
         galaxy.classList.add('visible');
         galaxy.setAttribute('aria-hidden','false');
         toggle.setAttribute('aria-expanded','true');
         toggle.textContent = 'Ocultar galaxia';
-        // opcional: dar foco al contenido para accesibilidad
-        // document.querySelector('.message h1').focus();
     }
-
     function hideGalaxy() {
         galaxy.classList.remove('visible');
         galaxy.setAttribute('aria-hidden','true');
@@ -320,29 +125,143 @@ body {
         toggle.textContent = 'Mostrar galaxia';
         toggle.focus();
     }
+    toggle.addEventListener('click', function(){ if (galaxy.classList.contains('visible')) hideGalaxy(); else showGalaxy(); });
+    closeBtn.addEventListener('click', hideGalaxy);
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { if (real.classList.contains('visible')) hideReal(); else if (galaxy.classList.contains('visible')) hideGalaxy(); } });
+    galaxy.addEventListener('click', function(e){ if (e.target === galaxy) hideGalaxy(); });
 
-    toggle.addEventListener('click', function(){
-        if (galaxy.classList.contains('visible')) hideGalaxy();
-        else showGalaxy();
+    // Open the realistic animated galaxy
+    openReal.addEventListener('click', function(){
+        // hide the soft overlay and show the canvas galaxy
+        hideGalaxy();
+        showReal();
     });
 
-    closeBtn.addEventListener('click', function(){ hideGalaxy(); });
+    function showReal(){
+        real.classList.add('visible');
+        real.setAttribute('aria-hidden','false');
+        startGalaxy();
+    }
+    function hideReal(){
+        real.classList.remove('visible');
+        real.setAttribute('aria-hidden','true');
+        stopGalaxy();
+        toggle.focus();
+    }
+    closeReal.addEventListener('click', hideReal);
+    real.addEventListener('click', function(e){ if (e.target === real) hideReal(); });
 
-    // cerrar con Escape
-    document.addEventListener('keydown', function(e){
-        if (e.key === 'Escape' && galaxy.classList.contains('visible')) {
-            hideGalaxy();
+    // ------------------ Canvas Galaxy ------------------
+    var canvas = document.getElementById('galaxyCanvas');
+    var ctx = canvas.getContext('2d');
+    var particles = [];
+    var animId = null;
+    var running = false;
+
+    function resize(){
+        canvas.width = window.innerWidth * devicePixelRatio;
+        canvas.height = window.innerHeight * devicePixelRatio;
+        canvas.style.width = window.innerWidth + 'px';
+        canvas.style.height = window.innerHeight + 'px';
+        ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    }
+    window.addEventListener('resize', resize);
+
+    function createParticles(){
+        particles = [];
+        var w = window.innerWidth;
+        var h = window.innerHeight;
+        var centerX = w/2;
+        var centerY = h/2;
+        var arms = 4; // number of spiral arms
+        var count = Math.max(800, Math.floor((w*h)/700));
+        for (var i=0;i<count;i++){
+            var arm = i % arms;
+            var r = Math.pow(Math.random(),1.2) * Math.min(w,h) * 0.45; // radius
+            var angle = r * 0.015 + (arm * (2*Math.PI/arms)) + (Math.random() - 0.5) * 0.6;
+            var x = centerX + Math.cos(angle) * r;
+            var y = centerY + Math.sin(angle) * r;
+            var size = Math.max(0.4, 2.2 * (1 - r/(Math.min(w,h)*0.45)) * Math.random());
+            var life = 1 + Math.random()*3;
+            var hue = 220 - (r/(Math.min(w,h)*0.45))*120 + Math.random()*30; // bluish to yellowish
+            particles.push({x:x, y:y, baseX:x-centerX, baseY:y-centerY, r:r, angle:angle, size:size, life:life, hue:hue, arm:arm});
         }
-    });
+    }
 
-    // Para tocar fuera de la caja si se desea cerrar (opcional)
-    galaxy.addEventListener('click', function(e){
-        // si se hace click directamente sobre el overlay (no en sus hijos) cerramos
-        if (e.target === galaxy) hideGalaxy();
-    });
+    var rotation = 0;
+    function draw(){
+        var w = canvas.width/devicePixelRatio;
+        var h = canvas.height/devicePixelRatio;
+        ctx.clearRect(0,0,w,h);
+        // subtle vignette
+        var g = ctx.createLinearGradient(0,0,0,h);
+        // center glow
+        ctx.globalCompositeOperation = 'source-over';
+        var radial = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.min(w,h)*0.6);
+        radial.addColorStop(0, 'rgba(255,245,220,0.18)');
+        radial.addColorStop(0.12, 'rgba(255,240,200,0.06)');
+        radial.addColorStop(0.5, 'rgba(20,10,40,0.06)');
+        radial.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.fillStyle = radial;
+        ctx.fillRect(0,0,w,h);
 
-    // Si quieres que la galaxia aparezca automáticamente la primera vez, descomenta:
-    // showGalaxy();
+        // stars background
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i=0;i<particles.length;i++){
+            var p = particles[i];
+            // update angle slowly to create swirl
+            var speed = 0.0006 + (0.0002 * (i%5));
+            p.angle += speed * (1 + p.r/ (Math.min(w,h))); // faster outside
+            var cx = w/2 + Math.cos(p.angle + rotation) * p.r;
+            var cy = h/2 + Math.sin(p.angle + rotation) * p.r;
+            var gradient = ctx.createRadialGradient(cx,cy,0,cx,cy,p.size*6);
+            var color = 'hsl(' + Math.round(p.hue) + ', 80%,' + (60 - (p.r/(Math.min(w,h)*0.45))*30) + '%)';
+            gradient.addColorStop(0, color);
+            gradient.addColorStop(0.3, 'rgba(255,255,255,0.65)');
+            gradient.addColorStop(0.6, 'rgba(180,200,255,0.14)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = gradient;
+            var s = p.size * (0.6 + 0.8 * Math.sin((Date.now()+i*37)/800)); // twinkle
+            ctx.beginPath();
+            ctx.arc(cx,cy,s,0,Math.PI*2);
+            ctx.fill();
+        }
+
+        // bright core
+        var coreRad = Math.min(w,h)*0.09 + Math.abs(Math.sin(Date.now()/2000))*Math.min(w,h)*0.01;
+        var core = ctx.createRadialGradient(w/2,h/2,0,w/2,h/2,coreRad);
+        core.addColorStop(0, 'rgba(255,250,230,1)');
+        core.addColorStop(0.2, 'rgba(255,230,200,0.9)');
+        core.addColorStop(0.4, 'rgba(255,200,160,0.32)');
+        core.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = core;
+        ctx.beginPath();
+        ctx.arc(w/2,h/2, coreRad, 0, Math.PI*2);
+        ctx.fill();
+
+        rotation += 0.0009; // slow global rotation
+        animId = requestAnimationFrame(draw);
+    }
+
+    function startGalaxy(){
+        if (running) return;
+        running = true;
+        resize();
+        createParticles();
+        animId = requestAnimationFrame(draw);
+    }
+    function stopGalaxy(){
+        running = false;
+        if (animId) cancelAnimationFrame(animId);
+        animId = null;
+        ctx && ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+
+    // Pause animation when tab hidden to save CPU
+    document.addEventListener('visibilitychange', function(){ if (document.hidden) { if (running) { cancelAnimationFrame(animId); animId = null; } } else { if (real.classList.contains('visible')) { animId = requestAnimationFrame(draw); } } });
+
+    // End canvas galaxy
 })();
 </script>
 
