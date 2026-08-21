@@ -13,12 +13,12 @@ body{background:#02000b;font-family:Georgia,serif;color:#fff;overflow:hidden}
 /* Simple overlay and message */
 .container{position:relative;height:100vh;width:100vw;display:flex;align-items:center;justify-content:center}
 .bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 40%, #151125 0%, #07030a 40%, #020008 100%);filter:blur(6px);opacity:.95}
-.static-galaxy{position:absolute;inset:0;pointer-events:none;}
+.static-galaxy{position:absolute;inset:0;pointer-events:none}
 .message-box{position:relative;z-index:20;background:rgba(8,6,16,0.6);backdrop-filter:blur(6px);padding:28px 22px;border-radius:20px;border:1px solid rgba(255,255,255,0.06);text-align:center;max-width:820px}
-.message-box h1{font-size:clamp(28px,5vw,56px);margin-bottom:10px;color:#fff}
+.message-box h1{font-size:clamp(28px,5vw,56px);margin-bottom:10px;color:#fff;transition:opacity .28s ease}
 .message-box p{color:#e9e1ff;margin-bottom:12px}
 
-/* Sections (buttons) placed around center to click) */
+/* Sections (buttons) placed around center) */
 .sections{position:absolute;inset:0;z-index:25;pointer-events:auto}
 .section-btn{position:absolute;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);color:#fff;padding:10px 14px;border-radius:12px;cursor:pointer;backdrop-filter:blur(6px);font-size:14px}
 .section-btn:active{transform:scale(.98)}
@@ -28,7 +28,7 @@ body{background:#02000b;font-family:Georgia,serif;color:#fff;overflow:hidden}
 .section-bottom-right{right:6%;bottom:14%}
 
 /* Input panel */
-.input-panel{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:30;display:flex;gap:8px;align-items:center}
+.input-panel{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;gap:8px;align-items:center}
 .input-panel input{padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:#fff;min-width:220px}
 .input-panel button{padding:10px 14px;border-radius:12px;border:none;background:linear-gradient(90deg,#ff7ab6,#8b5cff);color:#fff;cursor:pointer}
 
@@ -36,6 +36,9 @@ body{background:#02000b;font-family:Georgia,serif;color:#fff;overflow:hidden}
 .preset-panel{position:fixed;left:16px;top:16px;z-index:30;padding:8px;background:rgba(0,0,0,0.45);border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
 .preset-panel button{display:block;background:transparent;border:none;color:#fff;padding:8px 6px;text-align:left;cursor:pointer}
 .preset-panel button:hover{background:rgba(255,255,255,0.02);border-radius:6px}
+
+/* share button small */
+.share-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff;padding:8px 10px;border-radius:10px;cursor:pointer}
 
 /* toast */
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:10%;background:rgba(0,0,0,0.6);color:#fff;padding:8px 12px;border-radius:10px;display:none;z-index:60}
@@ -114,12 +117,14 @@ body{background:#02000b;font-family:Georgia,serif;color:#fff;overflow:hidden}
 <div class="input-panel" role="form" aria-label="Escribe tu mensaje">
   <input id="customInput" type="text" placeholder="Escribe algo bonito..." aria-label="Mensaje personalizado" />
   <button id="applyCustom">Poner mensaje</button>
+  <button id="shareBtn" class="share-btn" title="Copiar enlace con mensaje">Compartir</button>
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function(){
+  var STORAGE_KEY = 'miMensajeGalaxia_v1';
   var headline = document.getElementById('headline');
   var subline = document.getElementById('subline');
   var sections = document.querySelectorAll('.section-btn');
@@ -127,31 +132,35 @@ body{background:#02000b;font-family:Georgia,serif;color:#fff;overflow:hidden}
   var input = document.getElementById('customInput');
   var apply = document.getElementById('applyCustom');
   var toast = document.getElementById('toast');
+  var shareBtn = document.getElementById('shareBtn');
 
   function showToast(msg){ toast.textContent = msg; toast.classList.add('show'); setTimeout(function(){ toast.classList.remove('show'); }, 2200); }
 
-  function setHeadline(text){
-    headline.textContent = text;
-    subline.textContent = "Que la galaxia siempre nos recuerde esto 💫";
-    showToast('Mensaje aplicado');
-  }
+  function saveMessage(text){ try{ localStorage.setItem(STORAGE_KEY, text); }catch(e){} }
+  function loadMessage(){ try{ return localStorage.getItem(STORAGE_KEY); }catch(e){ return null; } }
+  function updateURL(text){ try{ var u = new URL(location); if(text) u.searchParams.set('msg', text); else u.searchParams.delete('msg'); history.replaceState({},'', u); }catch(e){} }
 
-  sections.forEach(function(btn){
-    btn.addEventListener('click', function(){ var m = btn.getAttribute('data-msg') || btn.textContent; setHeadline(m); });
-  });
+  // fade helper when changing headline
+  function setHeadline(text){ if(!text) return; headline.style.opacity = 0; setTimeout(function(){ headline.textContent = text; headline.style.opacity = 1; }, 220); subline.textContent = "Que la galaxia siempre nos recuerde esto 💫"; saveMessage(text); updateURL(text); }
 
-  presets.forEach(function(btn){ btn.addEventListener('click', function(){ setHeadline(btn.getAttribute('data-msg')); }); });
+  // init from URL or localStorage
+  function initFromSource(){ var params = new URLSearchParams(location.search); var m = params.get('msg'); if(m && m.trim()){ setHeadline(m); } else { var saved = loadMessage(); if(saved) setHeadline(saved); } }
 
-  apply.addEventListener('click', function(){ var v = input.value.trim(); if(!v){ showToast('Escribe algo primero 😊'); input.focus(); return; } setHeadline(v); input.value=''; });
-
-  // keyboard for quick apply (Enter)
+  sections.forEach(function(btn){ btn.addEventListener('click', function(){ var m = btn.getAttribute('data-msg') || btn.textContent; setHeadline(m); showToast('Mensaje aplicado'); }); });
+  presets.forEach(function(btn){ btn.addEventListener('click', function(){ setHeadline(btn.getAttribute('data-msg')); showToast('Mensaje aplicado'); }); });
+  apply.addEventListener('click', function(){ var v = input.value.trim(); if(!v){ showToast('Escribe algo primero 😊'); input.focus(); return; } setHeadline(v); input.value=''; showToast('Mensaje guardado'); });
   input.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ apply.click(); } });
 
-  // remove any moving animations if present and ensure static experience
-  try{ document.querySelectorAll('canvas').forEach(function(c){ c.style.display='none'; }); } catch(e){}
+  shareBtn.addEventListener('click', function(){ var current = headline.textContent || ''; var u = new URL(location); if(current) u.searchParams.set('msg', current); else u.searchParams.delete('msg'); var link = u.toString(); // copy to clipboard
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(link).then(function(){ showToast('Enlace copiado'); }, function(){ fallbackCopy(link); }); } else { fallbackCopy(link); }
+  });
+  function fallbackCopy(text){ var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); showToast('Enlace copiado'); }catch(e){ showToast('No se pudo copiar'); } ta.remove(); }
 
-  // initial friendly toast
-  setTimeout(function(){ showToast('Pulsa los apartados para ver frases bonitas'); }, 700);
+  // On load apply persisted or URL message
+  initFromSource();
+
+  // Friendly hint
+  setTimeout(function(){ showToast('Pulsa los apartados o escribe tu mensaje :)'); }, 800);
 })();
 </script>
 
